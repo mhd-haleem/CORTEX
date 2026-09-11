@@ -14,9 +14,20 @@ echo "========================================"
 echo " Starting OpenLane Synthesis"
 echo "========================================"
 
-# 1. Run OpenLane Synthesis
-# Using a Here-String (<<<) to pass the command into the interactive docker container
-make mount <<< "./flow.tcl -design $DESIGN"
+# 1. Run OpenLane Synthesis Non-Interactively
+echo "Executing OpenLane non-interactively..."
+
+docker run --rm \
+    -v /home/basith/OpenLane:/openlane \
+    -v /home/basith/OpenLane/designs:/openlane/install \
+    -v /home/basith:/home/basith \
+    -v /home/basith/.ciel:/home/basith/.ciel \
+    -e PDK_ROOT=/home/basith/.ciel \
+    -e PDK=sky130A \
+    --user 1000:1000 \
+    --network host \
+    ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64 \
+    bash -c "./flow.tcl -design $DESIGN"
 
 # Capture the exit status
 if [ $? -eq 0 ]; then

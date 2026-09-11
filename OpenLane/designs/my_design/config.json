@@ -1,0 +1,21 @@
+{
+    "DESIGN_NAME": "xbar_3by3_benchmark_top",
+    "VERILOG_FILES": [
+        "dir::src/xbar_3by3_bencmark_top.v",
+        "dir::src/clk_divider.v",
+        "dir::src/input_port_3by3.v",
+        "dir::src/output_port_3by3.v",
+        "dir::src/top_fifo.v",
+        "dir::src/fifo.v",
+        "dir::src/sync_r2w.v",
+        "dir::src/sync_w2r.v",
+        "dir::src/wptr_full.v",
+        "dir::src/rptr_empty.v"
+    ],
+    "BASE_SDC_FILE": "dir::src/constraints.sdc",
+    "CLOCK_PORT": "clk_in_0 clk_in_1 clk_in_2 clk_out_0 clk_out_1 clk_out_2",
+    "FP_CORE_UTIL": 45,
+    "PL_TARGET_DENSITY": 0.50,
+    "SYNTH_MAX_FANOUT": 20,
+    "SYNTH_AUTONAME": 1
+}

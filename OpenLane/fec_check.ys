@@ -1,0 +1,23 @@
+# 1. Read the Sky130 Standard Cell Logic (Liberty format)
+read_liberty -lib /home/basith/.ciel/ciel/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+# 2. Read the ORIGINAL (Gold) RTL
+read_verilog /home/basith/OpenLane/designs/my_design/src/*.v
+prep -flatten -top xbar_3by3_benchmark_top
+design -stash gold
+
+# 3. Read Liberty AGAIN for the gate-level design
+read_liberty -lib /home/basith/.ciel/ciel/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+# 4. Read the SYNTHESIZED TOP-LEVEL Netlist (Gate)
+read_verilog /home/basith/OpenLane/designs/my_design/runs/RUN_2026.09.09_18.14.52/results/synthesis/xbar_3by3_benchmark_top.v
+prep -flatten -top xbar_3by3_benchmark_top
+design -stash gate
+
+# 5. Create Miter and Prove Equivalence
+design -copy-from gold -as gold xbar_3by3_benchmark_top
+design -copy-from gate -as gate xbar_3by3_benchmark_top
+equiv_make gold gate equiv_circuit
+hierarchy -top equiv_circuit
+equiv_simple
+equiv_induct
+equiv_status -assert

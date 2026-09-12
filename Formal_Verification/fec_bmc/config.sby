@@ -1,0 +1,21 @@
+[options]
+mode bmc
+depth 15 
+
+[engines]
+smtbmc boolector
+
+[script]
+read_verilog output_port_3by3.v
+rename output_port_3by3 gold
+
+read_verilog output_port_3by3_opt.v
+rename output_port_3by3 revised
+
+read_verilog -sv sec_wrapper.sv
+prep -top sec_wrapper
+
+[files]
+output_port_3by3.v
+output_port_3by3_opt.v
+sec_wrapper.sv

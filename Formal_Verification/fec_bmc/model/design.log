@@ -1,0 +1,711 @@
+
+ /----------------------------------------------------------------------------\
+ |                                                                            |
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |                                                                            |
+ |  Copyright (C) 2012 - 2020  Claire Xenia Wolf <claire@yosyshq.com>         |
+ |                                                                            |
+ |  Permission to use, copy, modify, and/or distribute this software for any  |
+ |  purpose with or without fee is hereby granted, provided that the above    |
+ |  copyright notice and this permission notice appear in all copies.         |
+ |                                                                            |
+ |  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |
+ |  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |
+ |  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |
+ |  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |
+ |  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |
+ |  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |
+ |  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |
+ |                                                                            |
+ \----------------------------------------------------------------------------/
+
+ Yosys 0.34+43 (git sha1 d21c464ae, clang 10.0.0-4ubuntu1 -fPIC -Os)
+
+
+-- Executing script file `../model/design.ys' --
+
+1. Executing Verilog-2005 frontend: output_port_3by3.v
+Parsing Verilog input from `output_port_3by3.v' to AST representation.
+Generating RTLIL representation for module `\output_port_3by3'.
+Successfully finished Verilog frontend.
+Renaming module \output_port_3by3 to \gold.
+
+2. Executing Verilog-2005 frontend: output_port_3by3_opt.v
+Parsing Verilog input from `output_port_3by3_opt.v' to AST representation.
+Generating RTLIL representation for module `\output_port_3by3'.
+Successfully finished Verilog frontend.
+Renaming module \output_port_3by3 to \revised.
+
+3. Executing Verilog-2005 frontend: sec_wrapper.sv
+Parsing SystemVerilog input from `sec_wrapper.sv' to AST representation.
+Generating RTLIL representation for module `\sec_wrapper'.
+Warning: Replacing memory \g_valid_out_pipe with list of registers. See sec_wrapper.sv:64
+Warning: Replacing memory \g_data_out_pipe with list of registers. See sec_wrapper.sv:63
+Successfully finished Verilog frontend.
+
+4. Executing PREP pass.
+
+4.1. Executing HIERARCHY pass (managing design hierarchy).
+
+4.1.1. Analyzing design hierarchy..
+Top module:  \sec_wrapper
+Used module:     \revised
+Used module:     \gold
+
+4.1.2. Analyzing design hierarchy..
+Top module:  \sec_wrapper
+Used module:     \revised
+Used module:     \gold
+Removed 0 unused modules.
+Module sec_wrapper directly or indirectly contains formal properties -> setting "keep" attribute.
+
+4.2. Executing PROC pass (convert processes to netlists).
+
+4.2.1. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+Cleaned up 0 empty switches.
+
+4.2.2. Executing PROC_RMDEAD pass (remove dead branches from decision trees).
+Marked 1 switch rules as full_case in process $proc$sec_wrapper.sv:60$124 in module sec_wrapper.
+Marked 3 switch rules as full_case in process $proc$output_port_3by3_opt.v:116$108 in module revised.
+Marked 1 switch rules as full_case in process $proc$output_port_3by3_opt.v:82$69 in module revised.
+Marked 11 switch rules as full_case in process $proc$output_port_3by3_opt.v:28$65 in module revised.
+Marked 3 switch rules as full_case in process $proc$output_port_3by3.v:80$58 in module gold.
+Marked 11 switch rules as full_case in process $proc$output_port_3by3.v:30$5 in module gold.
+Removed a total of 0 dead cases.
+
+4.2.3. Executing PROC_PRUNE pass (remove redundant assignments in processes).
+Removed 39 redundant assignments.
+Promoted 19 assignments to connections.
+
+4.2.4. Executing PROC_INIT pass (extract init attributes).
+Found init rule in `\sec_wrapper.$proc$sec_wrapper.sv:0$160'.
+  Set init value: $formal$sec_wrapper.sv:92$118_EN = 1'0
+Found init rule in `\sec_wrapper.$proc$sec_wrapper.sv:0$158'.
+  Set init value: $formal$sec_wrapper.sv:86$117_EN = 1'0
+Found init rule in `\sec_wrapper.$proc$sec_wrapper.sv:0$156'.
+  Set init value: $formal$sec_wrapper.sv:85$116_EN = 1'0
+Found init rule in `\sec_wrapper.$proc$sec_wrapper.sv:0$154'.
+  Set init value: $formal$sec_wrapper.sv:84$115_EN = 1'0
+Found init rule in `\sec_wrapper.$proc$sec_wrapper.sv:0$152'.
+  Set init value: $formal$sec_wrapper.sv:81$114_EN = 1'0
+Found init rule in `\sec_wrapper.$proc$sec_wrapper.sv:0$150'.
+  Set init value: $formal$sec_wrapper.sv:16$113_EN = 1'0
+Found init rule in `\sec_wrapper.$proc$sec_wrapper.sv:12$149'.
+  Set init value: \f_past_valid = 1'0
+
+4.2.5. Executing PROC_ARST pass (detect async resets in processes).
+Found async reset \rst_n in `\revised.$proc$output_port_3by3_opt.v:116$108'.
+Found async reset \rst_n in `\revised.$proc$output_port_3by3_opt.v:82$69'.
+Found async reset \rst_n in `\gold.$proc$output_port_3by3.v:80$58'.
+
+4.2.6. Executing PROC_ROM pass (convert switches to ROMs).
+Converted 0 switches.
+<suppressed ~35 debug messages>
+
+4.2.7. Executing PROC_MUX pass (convert decision trees to multiplexers).
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:0$160'.
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:0$158'.
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:0$156'.
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:0$154'.
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:0$152'.
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:0$150'.
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:12$149'.
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+     1/10: $0$formal$sec_wrapper.sv:81$114_EN[0:0]$128
+     2/10: $0$formal$sec_wrapper.sv:81$114_CHECK[0:0]$127
+     3/10: $0$formal$sec_wrapper.sv:84$115_EN[0:0]$130
+     4/10: $0$formal$sec_wrapper.sv:84$115_CHECK[0:0]$129
+     5/10: $0$formal$sec_wrapper.sv:85$116_EN[0:0]$132
+     6/10: $0$formal$sec_wrapper.sv:85$116_CHECK[0:0]$131
+     7/10: $0$formal$sec_wrapper.sv:86$117_EN[0:0]$134
+     8/10: $0$formal$sec_wrapper.sv:86$117_CHECK[0:0]$133
+     9/10: $0$formal$sec_wrapper.sv:92$118_EN[0:0]$136
+    10/10: $0$formal$sec_wrapper.sv:92$118_CHECK[0:0]$135
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+     1/25: $1\i[31:0]
+     2/25: $0\g_valid_out_pipe[11][0:0]
+     3/25: $0\g_data_out_pipe[11][63:0]
+     4/25: $0\g_valid_out_pipe[10][0:0]
+     5/25: $0\g_data_out_pipe[10][63:0]
+     6/25: $0\g_valid_out_pipe[9][0:0]
+     7/25: $0\g_data_out_pipe[9][63:0]
+     8/25: $0\g_valid_out_pipe[8][0:0]
+     9/25: $0\g_data_out_pipe[8][63:0]
+    10/25: $0\g_valid_out_pipe[7][0:0]
+    11/25: $0\g_data_out_pipe[7][63:0]
+    12/25: $0\g_valid_out_pipe[6][0:0]
+    13/25: $0\g_data_out_pipe[6][63:0]
+    14/25: $0\g_valid_out_pipe[5][0:0]
+    15/25: $0\g_data_out_pipe[5][63:0]
+    16/25: $0\g_valid_out_pipe[4][0:0]
+    17/25: $0\g_data_out_pipe[4][63:0]
+    18/25: $0\g_valid_out_pipe[3][0:0]
+    19/25: $0\g_data_out_pipe[3][63:0]
+    20/25: $0\g_valid_out_pipe[2][0:0]
+    21/25: $0\g_data_out_pipe[2][63:0]
+    22/25: $0\g_valid_out_pipe[1][0:0]
+    23/25: $0\g_data_out_pipe[1][63:0]
+    24/25: $0\g_valid_out_pipe[0][0:0]
+    25/25: $0\g_data_out_pipe[0][63:0]
+Creating decoders for process `\sec_wrapper.$proc$sec_wrapper.sv:13$119'.
+     1/2: $0$formal$sec_wrapper.sv:16$113_EN[0:0]$121
+     2/2: $0$formal$sec_wrapper.sv:16$113_CHECK[0:0]$120
+Creating decoders for process `\revised.$proc$output_port_3by3_opt.v:116$108'.
+     1/3: $0\valid_out[0:0]
+     2/3: $0\ptr[1:0]
+     3/3: $0\data_out[63:0]
+Creating decoders for process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+     1/13: $0\valid_pipe[11:0]
+     2/13: $0\processed_comb[63:0]
+     3/13: $0\stage11[63:0]
+     4/13: $0\stage10[63:0]
+     5/13: $0\stage9[63:0]
+     6/13: $0\stage8[63:0]
+     7/13: $0\stage7[63:0]
+     8/13: $0\stage6[63:0]
+     9/13: $0\stage5[63:0]
+    10/13: $0\stage4[63:0]
+    11/13: $0\stage3[63:0]
+    12/13: $0\stage2[63:0]
+    13/13: $0\stage1[63:0]
+Creating decoders for process `\revised.$proc$output_port_3by3_opt.v:28$65'.
+     1/11: $11\grant[2:0]
+     2/11: $10\grant[2:0]
+     3/11: $9\grant[2:0]
+     4/11: $8\grant[2:0]
+     5/11: $7\grant[2:0]
+     6/11: $6\grant[2:0]
+     7/11: $5\grant[2:0]
+     8/11: $4\grant[2:0]
+     9/11: $3\grant[2:0]
+    10/11: $2\grant[2:0]
+    11/11: $1\grant[2:0]
+Creating decoders for process `\gold.$proc$output_port_3by3.v:80$58'.
+     1/3: $0\valid_out[0:0]
+     2/3: $0\ptr[1:0]
+     3/3: $0\data_out[63:0]
+Creating decoders for process `\gold.$proc$output_port_3by3.v:72$9'.
+Creating decoders for process `\gold.$proc$output_port_3by3.v:30$5'.
+     1/11: $11\grant[2:0]
+     2/11: $10\grant[2:0]
+     3/11: $9\grant[2:0]
+     4/11: $8\grant[2:0]
+     5/11: $7\grant[2:0]
+     6/11: $6\grant[2:0]
+     7/11: $5\grant[2:0]
+     8/11: $4\grant[2:0]
+     9/11: $3\grant[2:0]
+    10/11: $2\grant[2:0]
+    11/11: $1\grant[2:0]
+
+4.2.8. Executing PROC_DLATCH pass (convert process syncs to latches).
+No latch inferred for signal `\revised.\rinc_0' from process `\revised.$proc$output_port_3by3_opt.v:28$65'.
+No latch inferred for signal `\revised.\rinc_1' from process `\revised.$proc$output_port_3by3_opt.v:28$65'.
+No latch inferred for signal `\revised.\rinc_2' from process `\revised.$proc$output_port_3by3_opt.v:28$65'.
+No latch inferred for signal `\revised.\grant' from process `\revised.$proc$output_port_3by3_opt.v:28$65'.
+No latch inferred for signal `\gold.\processed_comb' from process `\gold.$proc$output_port_3by3.v:72$9'.
+No latch inferred for signal `\gold.\step' from process `\gold.$proc$output_port_3by3.v:72$9'.
+No latch inferred for signal `\gold.\rinc_0' from process `\gold.$proc$output_port_3by3.v:30$5'.
+No latch inferred for signal `\gold.\rinc_1' from process `\gold.$proc$output_port_3by3.v:30$5'.
+No latch inferred for signal `\gold.\rinc_2' from process `\gold.$proc$output_port_3by3.v:30$5'.
+No latch inferred for signal `\gold.\grant' from process `\gold.$proc$output_port_3by3.v:30$5'.
+
+4.2.9. Executing PROC_DFF pass (convert process syncs to FFs).
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:81$114_CHECK' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$544' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:81$114_EN' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$545' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:84$115_CHECK' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$546' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:84$115_EN' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$547' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:85$116_CHECK' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$548' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:85$116_EN' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$549' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:86$117_CHECK' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$550' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:86$117_EN' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$551' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:92$118_CHECK' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$552' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:92$118_EN' using process `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+  created $dff cell `$procdff$553' with positive edge clock.
+Creating register for signal `\sec_wrapper.\i' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$554' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[0]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$555' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[1]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$556' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[2]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$557' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[3]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$558' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[4]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$559' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[5]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$560' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[6]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$561' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[7]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$562' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[8]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$563' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[9]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$564' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[10]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$565' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_data_out_pipe[11]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$566' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[0]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$567' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[1]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$568' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[2]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$569' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[3]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$570' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[4]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$571' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[5]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$572' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[6]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$573' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[7]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$574' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[8]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$575' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[9]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$576' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[10]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$577' with positive edge clock.
+Creating register for signal `\sec_wrapper.\g_valid_out_pipe[11]' using process `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+  created $dff cell `$procdff$578' with positive edge clock.
+Creating register for signal `\sec_wrapper.\f_past_valid' using process `\sec_wrapper.$proc$sec_wrapper.sv:13$119'.
+  created $dff cell `$procdff$579' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:16$113_CHECK' using process `\sec_wrapper.$proc$sec_wrapper.sv:13$119'.
+  created $dff cell `$procdff$580' with positive edge clock.
+Creating register for signal `\sec_wrapper.$formal$sec_wrapper.sv:16$113_EN' using process `\sec_wrapper.$proc$sec_wrapper.sv:13$119'.
+  created $dff cell `$procdff$581' with positive edge clock.
+Creating register for signal `\revised.\data_out' using process `\revised.$proc$output_port_3by3_opt.v:116$108'.
+  created $adff cell `$procdff$582' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\valid_out' using process `\revised.$proc$output_port_3by3_opt.v:116$108'.
+  created $adff cell `$procdff$583' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\ptr' using process `\revised.$proc$output_port_3by3_opt.v:116$108'.
+  created $adff cell `$procdff$584' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\processed_comb' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$585' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage1' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$586' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage2' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$587' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage3' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$588' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage4' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$589' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage5' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$590' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage6' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$591' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage7' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$592' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage8' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$593' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage9' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$594' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage10' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$595' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\stage11' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$596' with positive edge clock and negative level reset.
+Creating register for signal `\revised.\valid_pipe' using process `\revised.$proc$output_port_3by3_opt.v:82$69'.
+  created $adff cell `$procdff$597' with positive edge clock and negative level reset.
+Creating register for signal `\gold.\data_out' using process `\gold.$proc$output_port_3by3.v:80$58'.
+  created $adff cell `$procdff$598' with positive edge clock and negative level reset.
+Creating register for signal `\gold.\valid_out' using process `\gold.$proc$output_port_3by3.v:80$58'.
+  created $adff cell `$procdff$599' with positive edge clock and negative level reset.
+Creating register for signal `\gold.\ptr' using process `\gold.$proc$output_port_3by3.v:80$58'.
+  created $adff cell `$procdff$600' with positive edge clock and negative level reset.
+
+4.2.10. Executing PROC_MEMWR pass (convert process memory writes to cells).
+
+4.2.11. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:0$160'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:0$158'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:0$156'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:0$154'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:0$152'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:0$150'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:12$149'.
+Found and cleaned up 2 empty switches in `\sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:79$126'.
+Found and cleaned up 1 empty switch in `\sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:60$124'.
+Found and cleaned up 1 empty switch in `\sec_wrapper.$proc$sec_wrapper.sv:13$119'.
+Removing empty process `sec_wrapper.$proc$sec_wrapper.sv:13$119'.
+Found and cleaned up 5 empty switches in `\revised.$proc$output_port_3by3_opt.v:116$108'.
+Removing empty process `revised.$proc$output_port_3by3_opt.v:116$108'.
+Removing empty process `revised.$proc$output_port_3by3_opt.v:82$69'.
+Found and cleaned up 11 empty switches in `\revised.$proc$output_port_3by3_opt.v:28$65'.
+Removing empty process `revised.$proc$output_port_3by3_opt.v:28$65'.
+Found and cleaned up 4 empty switches in `\gold.$proc$output_port_3by3.v:80$58'.
+Removing empty process `gold.$proc$output_port_3by3.v:80$58'.
+Removing empty process `gold.$proc$output_port_3by3.v:72$9'.
+Found and cleaned up 11 empty switches in `\gold.$proc$output_port_3by3.v:30$5'.
+Removing empty process `gold.$proc$output_port_3by3.v:30$5'.
+Cleaned up 35 empty switches.
+
+4.2.12. Executing OPT_EXPR pass (perform const folding).
+Optimizing module sec_wrapper.
+<suppressed ~26 debug messages>
+Optimizing module revised.
+<suppressed ~34 debug messages>
+Optimizing module gold.
+<suppressed ~34 debug messages>
+
+4.3. Executing FUTURE pass.
+
+4.4. Executing OPT_EXPR pass (perform const folding).
+Optimizing module sec_wrapper.
+Optimizing module revised.
+Optimizing module gold.
+
+4.5. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \sec_wrapper..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \gold..
+Removed 12 unused cells and 246 unused wires.
+<suppressed ~18 debug messages>
+
+4.6. Executing CHECK pass (checking for obvious problems).
+Checking module gold...
+Checking module revised...
+Checking module sec_wrapper...
+Found and reported 0 problems.
+
+4.7. Executing OPT pass (performing simple optimizations).
+
+4.7.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module gold.
+Optimizing module revised.
+Optimizing module sec_wrapper.
+
+4.7.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\gold'.
+<suppressed ~30 debug messages>
+Finding identical cells in module `\revised'.
+<suppressed ~30 debug messages>
+Finding identical cells in module `\sec_wrapper'.
+Removed a total of 20 cells.
+
+4.7.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+Running muxtree optimizer on module \gold..
+  Creating internal representation of mux trees.
+  Evaluating internal representation of mux trees.
+  Analyzing evaluation results.
+    dead port 2/2 on $mux $procmux$422.
+    dead port 2/2 on $mux $procmux$425.
+    dead port 2/2 on $mux $procmux$427.
+    dead port 2/2 on $mux $procmux$429.
+    dead port 2/2 on $mux $procmux$437.
+    dead port 2/2 on $mux $procmux$439.
+    dead port 2/2 on $mux $procmux$441.
+    dead port 2/2 on $mux $procmux$448.
+    dead port 2/2 on $mux $procmux$450.
+    dead port 2/2 on $mux $procmux$459.
+    dead port 2/2 on $mux $procmux$462.
+    dead port 2/2 on $mux $procmux$464.
+    dead port 2/2 on $mux $procmux$466.
+    dead port 2/2 on $mux $procmux$475.
+    dead port 2/2 on $mux $procmux$477.
+    dead port 2/2 on $mux $procmux$479.
+    dead port 2/2 on $mux $procmux$487.
+    dead port 2/2 on $mux $procmux$489.
+    dead port 2/2 on $mux $procmux$499.
+    dead port 2/2 on $mux $procmux$502.
+    dead port 2/2 on $mux $procmux$504.
+    dead port 2/2 on $mux $procmux$506.
+    dead port 2/2 on $mux $procmux$516.
+    dead port 2/2 on $mux $procmux$518.
+    dead port 2/2 on $mux $procmux$520.
+    dead port 2/2 on $mux $procmux$529.
+    dead port 2/2 on $mux $procmux$531.
+    dead port 2/2 on $mux $procmux$539.
+Running muxtree optimizer on module \revised..
+  Creating internal representation of mux trees.
+  Evaluating internal representation of mux trees.
+  Analyzing evaluation results.
+    dead port 2/2 on $mux $procmux$282.
+    dead port 2/2 on $mux $procmux$285.
+    dead port 2/2 on $mux $procmux$287.
+    dead port 2/2 on $mux $procmux$289.
+    dead port 2/2 on $mux $procmux$297.
+    dead port 2/2 on $mux $procmux$299.
+    dead port 2/2 on $mux $procmux$301.
+    dead port 2/2 on $mux $procmux$308.
+    dead port 2/2 on $mux $procmux$310.
+    dead port 2/2 on $mux $procmux$319.
+    dead port 2/2 on $mux $procmux$322.
+    dead port 2/2 on $mux $procmux$324.
+    dead port 2/2 on $mux $procmux$326.
+    dead port 2/2 on $mux $procmux$335.
+    dead port 2/2 on $mux $procmux$337.
+    dead port 2/2 on $mux $procmux$339.
+    dead port 2/2 on $mux $procmux$347.
+    dead port 2/2 on $mux $procmux$349.
+    dead port 2/2 on $mux $procmux$359.
+    dead port 2/2 on $mux $procmux$362.
+    dead port 2/2 on $mux $procmux$364.
+    dead port 2/2 on $mux $procmux$366.
+    dead port 2/2 on $mux $procmux$376.
+    dead port 2/2 on $mux $procmux$378.
+    dead port 2/2 on $mux $procmux$380.
+    dead port 2/2 on $mux $procmux$389.
+    dead port 2/2 on $mux $procmux$391.
+    dead port 2/2 on $mux $procmux$399.
+Running muxtree optimizer on module \sec_wrapper..
+  Creating internal representation of mux trees.
+  Evaluating internal representation of mux trees.
+  Analyzing evaluation results.
+Removed 56 multiplexer ports.
+<suppressed ~44 debug messages>
+
+4.7.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+  Optimizing cells in module \gold.
+  Optimizing cells in module \revised.
+  Optimizing cells in module \sec_wrapper.
+Performed a total of 0 changes.
+
+4.7.5. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\gold'.
+Finding identical cells in module `\revised'.
+Finding identical cells in module `\sec_wrapper'.
+<suppressed ~18 debug messages>
+Removed a total of 6 cells.
+
+4.7.6. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \gold..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \sec_wrapper..
+Removed 0 unused cells and 82 unused wires.
+<suppressed ~3 debug messages>
+
+4.7.7. Executing OPT_EXPR pass (perform const folding).
+Optimizing module gold.
+Optimizing module revised.
+Optimizing module sec_wrapper.
+
+4.7.8. Rerunning OPT passes. (Maybe there is more to do..)
+
+4.7.9. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+Running muxtree optimizer on module \gold..
+  Creating internal representation of mux trees.
+  Evaluating internal representation of mux trees.
+  Analyzing evaluation results.
+Running muxtree optimizer on module \revised..
+  Creating internal representation of mux trees.
+  Evaluating internal representation of mux trees.
+  Analyzing evaluation results.
+Running muxtree optimizer on module \sec_wrapper..
+  Creating internal representation of mux trees.
+  Evaluating internal representation of mux trees.
+  Analyzing evaluation results.
+Removed 0 multiplexer ports.
+<suppressed ~41 debug messages>
+
+4.7.10. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+  Optimizing cells in module \gold.
+  Optimizing cells in module \revised.
+  Optimizing cells in module \sec_wrapper.
+Performed a total of 0 changes.
+
+4.7.11. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\gold'.
+Finding identical cells in module `\revised'.
+Finding identical cells in module `\sec_wrapper'.
+Removed a total of 0 cells.
+
+4.7.12. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \gold..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \sec_wrapper..
+
+4.7.13. Executing OPT_EXPR pass (perform const folding).
+Optimizing module gold.
+Optimizing module revised.
+Optimizing module sec_wrapper.
+
+4.7.14. Finished OPT passes. (There is nothing left to do.)
+
+4.8. Executing WREDUCE pass (reducing word size of cells).
+Removed top 63 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$13 ($add).
+Removed top 61 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$17 ($add).
+Removed top 60 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$21 ($add).
+Removed top 59 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$25 ($add).
+Removed top 59 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$29 ($add).
+Removed top 58 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$33 ($add).
+Removed top 58 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$37 ($add).
+Removed top 58 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$41 ($add).
+Removed top 58 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$45 ($add).
+Removed top 58 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$49 ($add).
+Removed top 57 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$53 ($add).
+Removed top 57 bits (of 64) from port B of cell gold.$add$output_port_3by3.v:75$57 ($add).
+Removed top 1 bits (of 3) from mux cell gold.$procmux$419 ($mux).
+Removed top 1 bits (of 3) from mux cell gold.$procmux$434 ($mux).
+Removed top 2 bits (of 3) from mux cell gold.$procmux$456 ($mux).
+Removed top 1 bits (of 2) from port B of cell gold.$procmux$465_CMP0 ($eq).
+Removed top 1 bits (of 3) from wire gold.$10\grant[2:0].
+Removed top 1 bits (of 3) from wire gold.$11\grant[2:0].
+Removed top 2 bits (of 3) from wire gold.$8\grant[2:0].
+Removed top 1 bits (of 3) from mux cell revised.$procmux$279 ($mux).
+Removed top 1 bits (of 3) from mux cell revised.$procmux$294 ($mux).
+Removed top 2 bits (of 3) from mux cell revised.$procmux$316 ($mux).
+Removed top 1 bits (of 2) from port B of cell revised.$procmux$325_CMP0 ($eq).
+Removed top 1 bits (of 3) from wire revised.$10\grant[2:0].
+Removed top 1 bits (of 3) from wire revised.$11\grant[2:0].
+Removed top 2 bits (of 3) from wire revised.$8\grant[2:0].
+
+4.9. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \gold..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \sec_wrapper..
+Removed 0 unused cells and 6 unused wires.
+<suppressed ~2 debug messages>
+
+4.10. Executing MEMORY_COLLECT pass (generating $mem cells).
+
+4.11. Executing OPT pass (performing simple optimizations).
+
+4.11.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module gold.
+Optimizing module revised.
+Optimizing module sec_wrapper.
+
+4.11.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\gold'.
+Finding identical cells in module `\revised'.
+Finding identical cells in module `\sec_wrapper'.
+Removed a total of 0 cells.
+
+4.11.3. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \gold..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \sec_wrapper..
+
+4.11.4. Finished fast OPT passes.
+
+4.12. Printing statistics.
+
+=== gold ===
+
+   Number of wires:                 75
+   Number of wire bits:           2901
+   Number of public wires:          19
+   Number of public wire bits:     431
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 62
+     $add                           24
+     $adff                           3
+     $eq                             2
+     $logic_not                      1
+     $mux                           18
+     $pmux                           1
+     $reduce_or                      1
+     $xor                           12
+
+=== revised ===
+
+   Number of wires:                 75
+   Number of wire bits:           2892
+   Number of public wires:          30
+   Number of public wire bits:    1115
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 63
+     $add                           12
+     $adff                          16
+     $eq                             2
+     $logic_not                      1
+     $mux                           18
+     $pmux                           1
+     $reduce_or                      1
+     $xor                           12
+
+=== sec_wrapper ===
+
+   Number of wires:                 95
+   Number of wire bits:           1922
+   Number of public wires:          44
+   Number of public wire bits:    1115
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 84
+     $assert                         5
+     $assume                         1
+     $dff                           34
+     $eq                             5
+     $logic_and                      1
+     $logic_not                      1
+     $mux                           35
+     gold                            1
+     revised                         1
+
+=== design hierarchy ===
+
+   sec_wrapper                       1
+     gold                            1
+     revised                         1
+
+   Number of wires:                245
+   Number of wire bits:           7715
+   Number of public wires:          93
+   Number of public wire bits:    2661
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                207
+     $add                           36
+     $adff                          19
+     $assert                         5
+     $assume                         1
+     $dff                           34
+     $eq                             9
+     $logic_and                      1
+     $logic_not                      3
+     $mux                           71
+     $pmux                           2
+     $reduce_or                      2
+     $xor                           24
+
+4.13. Executing CHECK pass (checking for obvious problems).
+Checking module gold...
+Checking module revised...
+Checking module sec_wrapper...
+Found and reported 0 problems.
+
+5. Executing HIERARCHY pass (managing design hierarchy).
+
+5.1. Analyzing design hierarchy..
+Top module:  \sec_wrapper
+Used module:     \gold
+Used module:     \revised
+
+5.2. Analyzing design hierarchy..
+Top module:  \sec_wrapper
+Used module:     \gold
+Used module:     \revised
+Removed 0 unused modules.
+Module sec_wrapper directly or indirectly contains formal properties -> setting "keep" attribute.
+
+6. Executing jny backend.
+
+7. Executing RTLIL backend.
+Output filename: ../model/design.il
+
+Warnings: 2 unique messages, 2 total
+End of script. Logfile hash: 326dde0ebc, CPU: user 0.28s system 0.02s, MEM: 17.80 MB peak
+Yosys 0.34+43 (git sha1 d21c464ae, clang 10.0.0-4ubuntu1 -fPIC -Os)
+Time spent: 33% 2x check (0 sec), 24% 5x opt_clean (0 sec), ...

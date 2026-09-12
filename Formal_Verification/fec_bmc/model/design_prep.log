@@ -1,0 +1,122 @@
+
+ /----------------------------------------------------------------------------\
+ |                                                                            |
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |                                                                            |
+ |  Copyright (C) 2012 - 2020  Claire Xenia Wolf <claire@yosyshq.com>         |
+ |                                                                            |
+ |  Permission to use, copy, modify, and/or distribute this software for any  |
+ |  purpose with or without fee is hereby granted, provided that the above    |
+ |  copyright notice and this permission notice appear in all copies.         |
+ |                                                                            |
+ |  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |
+ |  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |
+ |  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |
+ |  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |
+ |  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |
+ |  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |
+ |  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |
+ |                                                                            |
+ \----------------------------------------------------------------------------/
+
+ Yosys 0.34+43 (git sha1 d21c464ae, clang 10.0.0-4ubuntu1 -fPIC -Os)
+
+
+-- Executing script file `design_prep.ys' --
+
+1. Executing RTLIL frontend.
+Input filename: design.il
+
+2. Executing SCC pass (detecting logic loops).
+Found 0 SCCs in module sec_wrapper.
+Found 0 SCCs in module revised.
+Found 0 SCCs in module gold.
+Found 0 SCCs.
+
+3. Executing SIMPLEMAP pass (map simple cells to gate primitives).
+
+4. Executing MEMORY_NORDFF pass (extracting $dff cells from memories).
+
+5. Executing ASYNC2SYNC pass.
+Replacing revised.$procdff$597 ($adff): ARST=\rst_n, D={ \valid_pipe [10:0] $0\valid_pipe[11:0] [0] }, Q=\valid_pipe
+Replacing revised.$procdff$596 ($adff): ARST=\rst_n, D=$0\stage11[63:0], Q=\stage11
+Replacing revised.$procdff$595 ($adff): ARST=\rst_n, D=$0\stage10[63:0], Q=\stage10
+Replacing revised.$procdff$594 ($adff): ARST=\rst_n, D=$0\stage9[63:0], Q=\stage9
+Replacing revised.$procdff$593 ($adff): ARST=\rst_n, D=$0\stage8[63:0], Q=\stage8
+Replacing revised.$procdff$592 ($adff): ARST=\rst_n, D=$0\stage7[63:0], Q=\stage7
+Replacing revised.$procdff$591 ($adff): ARST=\rst_n, D=$0\stage6[63:0], Q=\stage6
+Replacing revised.$procdff$590 ($adff): ARST=\rst_n, D=$0\stage5[63:0], Q=\stage5
+Replacing revised.$procdff$589 ($adff): ARST=\rst_n, D=$0\stage4[63:0], Q=\stage4
+Replacing revised.$procdff$588 ($adff): ARST=\rst_n, D=$0\stage3[63:0], Q=\stage3
+Replacing revised.$procdff$587 ($adff): ARST=\rst_n, D=$0\stage2[63:0], Q=\stage2
+Replacing revised.$procdff$586 ($adff): ARST=\rst_n, D=$0\stage1[63:0], Q=\stage1
+Replacing revised.$procdff$585 ($adff): ARST=\rst_n, D=$0\processed_comb[63:0], Q=\processed_comb
+Replacing revised.$procdff$584 ($adff): ARST=\rst_n, D=$0\ptr[1:0], Q=\ptr
+Replacing revised.$procdff$583 ($adff): ARST=\rst_n, D=\valid_pipe [11], Q=\valid_out
+Replacing revised.$procdff$582 ($adff): ARST=\rst_n, D=$0\data_out[63:0], Q=\data_out
+Replacing gold.$procdff$600 ($adff): ARST=\rst_n, D=$0\ptr[1:0], Q=\ptr
+Replacing gold.$procdff$599 ($adff): ARST=\rst_n, D=$0\valid_out[0:0], Q=\valid_out
+Replacing gold.$procdff$598 ($adff): ARST=\rst_n, D=$0\data_out[63:0], Q=\data_out
+
+6. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \sec_wrapper..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \gold..
+Removed 2 unused cells and 2 unused wires.
+<suppressed ~3 debug messages>
+
+7. Executing FORMALFF pass.
+
+8. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \gold..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \sec_wrapper..
+Removed 3 unused cells and 3 unused wires.
+<suppressed ~6 debug messages>
+
+9. Executing CHECK pass (checking for obvious problems).
+Checking module gold...
+Checking module revised...
+Checking module sec_wrapper...
+Found and reported 0 problems.
+
+10. Executing SETUNDEF pass (replace undef values with defined constants).
+
+11. Executing OPT pass (performing simple optimizations).
+
+11.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module gold.
+<suppressed ~1 debug messages>
+Optimizing module revised.
+Optimizing module sec_wrapper.
+
+11.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\gold'.
+Finding identical cells in module `\revised'.
+Finding identical cells in module `\sec_wrapper'.
+Removed a total of 0 cells.
+
+11.3. Executing OPT_DFF pass (perform DFF optimizations).
+
+11.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \gold..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \sec_wrapper..
+Removed 0 unused cells and 1 unused wires.
+<suppressed ~2 debug messages>
+
+11.5. Finished fast OPT passes.
+
+12. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \gold..
+Finding unused cells or wires in module \revised..
+Finding unused cells or wires in module \sec_wrapper..
+Removed 0 unused cells and 15 unused wires.
+<suppressed ~2 debug messages>
+
+13. Executing RTLIL backend.
+Output filename: ../model/design_prep.il
+
+End of script. Logfile hash: 36179ce73c, CPU: user 0.18s system 0.02s, MEM: 18.22 MB peak
+Yosys 0.34+43 (git sha1 d21c464ae, clang 10.0.0-4ubuntu1 -fPIC -Os)
+Time spent: 34% 4x opt_clean (0 sec), 26% 1x check (0 sec), ...

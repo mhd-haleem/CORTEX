@@ -1,6 +1,7 @@
 # Version 3 : Check existing RTL for syntax errors -> Generate & Feedback
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -52,9 +53,9 @@ def send_message_with_retry(chat, prompt: str, max_retries=3, backoff_seconds=5)
             else:
                 raise e
 
-def modify_and_fix_rtl(source_file: str, modification_prompt: str, max_iterations=3) -> bool:
+def modify_and_fix_rtl(source_file: str, modification_prompt: str, json_data: dict, max_iterations=3) -> bool:
     """
-    Reads an existing Verilog file, applies modifications using Gemini based on a prompt,
+    Reads an existing Verilog file, applies modifications using Gemini based on prompt and JSON context,
     checks it with iverilog, and loops to fix any compilation bugs.
     Saves iteration files separately.
     """
@@ -65,13 +66,17 @@ def modify_and_fix_rtl(source_file: str, modification_prompt: str, max_iteration
     with open(source_file, "r", encoding="utf-8") as f:
         existing_code = f.read()
 
+    json_str = json.dumps(json_data, indent=2)
+
     print(f"[*] Loaded existing RTL from {source_file} ({len(existing_code.splitlines())} lines)")
+    print(f"[*] Loaded JSON context data")
     print(f"[*] Initializing chat loop for model gemini-3.6-flash...")
     chat = client.chats.create(model="gemini-3.6-flash")
     
     system_instruction = (
         "You are an expert RTL hardware engineer. Your task is to modify the provided Verilog code "
-        "according to the user's modification request. Ensure the code remains completely valid and synthesizable. "
+        "according to the user's modification request and the specifications in the provided JSON file. "
+        "Ensure the code remains completely valid and synthesizable. "
         "Wrap your updated code cleanly inside ```verilog ... ``` markdown tags. Do not provide long textual explanations."
     )
     
@@ -79,6 +84,8 @@ def modify_and_fix_rtl(source_file: str, modification_prompt: str, max_iteration
         f"{system_instruction}\n\n"
         f"--- Existing Verilog Code ---\n"
         f"```verilog\n{existing_code}\n```\n\n"
+        f"--- JSON Context / Specifications ---\n"
+        f"```json\n{json_str}\n```\n\n"
         f"--- Modification Request ---\n"
         f"{modification_prompt}"
     )
@@ -119,7 +126,7 @@ def modify_and_fix_rtl(source_file: str, modification_prompt: str, max_iteration
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Modify a Verilog file using Gemini based on a prompt file and verify syntax with Icarus Verilog."
+        description="Modify a Verilog file using Gemini based on a prompt file and a JSON file, and verify syntax with Icarus Verilog."
     )
     parser.add_argument(
         "rtl_file", 
@@ -130,6 +137,11 @@ def main():
         "prompt_file", 
         type=str, 
         help="Path to the text file containing modification instructions"
+    )
+    parser.add_argument(
+        "json_file", 
+        type=str, 
+        help="Path to the JSON file containing specs/configurations"
     )
     parser.add_argument(
         "--max-iterations", 
@@ -148,6 +160,18 @@ def main():
         print(f"[ERROR] Prompt file not found: {args.prompt_file}")
         return
 
+    if not os.path.exists(args.json_file):
+        print(f"[ERROR] JSON file not found: {args.json_file}")
+        return
+
+    # Parse and validate the JSON content
+    try:
+        with open(args.json_file, "r", encoding="utf-8") as f:
+            json_data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] Failed to parse JSON file '{args.json_file}': {e}")
+        return
+
     with open(args.prompt_file, "r", encoding="utf-8") as f:
         modification_prompt = f.read().strip()
 
@@ -158,6 +182,7 @@ def main():
     modify_and_fix_rtl(
         source_file=args.rtl_file,
         modification_prompt=modification_prompt,
+        json_data=json_data,
         max_iterations=args.max_iterations
     )
 

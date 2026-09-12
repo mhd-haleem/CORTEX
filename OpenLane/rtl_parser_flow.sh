@@ -10,13 +10,40 @@ PARSER_SCRIPT="rtl_parser.py"
 PARSER_JSON_OUT="llm_payload.json"
 RTL_FILES_OUT="critical_rtl_snippets.md"
 
+# Dynamically set paths so anyone can run this
+OPENLANE_DIR=$(pwd)
+# Use the user's PDK_ROOT if exported, otherwise default to ~/.ciel
+USER_PDK_ROOT=${PDK_ROOT:-$HOME/.ciel}
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+
 echo "========================================"
 echo " Starting OpenLane Synthesis"
 echo "========================================"
 
-# 1. Run OpenLane Synthesis
-# Using a Here-String (<<<) to pass the command into the interactive docker container
-make mount <<< "./flow.tcl -design $DESIGN"
+# Check if PDK directory actually exists to help new users
+if [ ! -d "$USER_PDK_ROOT" ]; then
+    echo "[ERROR] PDK_ROOT not found at $USER_PDK_ROOT."
+    echo "If your PDK is located elsewhere, run: export PDK_ROOT=/path/to/your/pdk"
+    exit 1
+fi
+
+# 1. Run OpenLane Synthesis Non-Interactively
+echo "Executing OpenLane non-interactively..."
+echo "Running in: $OPENLANE_DIR"
+echo "Using PDK: $USER_PDK_ROOT"
+
+docker run --rm \
+    -v "$OPENLANE_DIR:/openlane" \
+    -v "$OPENLANE_DIR/designs:/openlane/install" \
+    -v "$HOME:$HOME" \
+    -v "$USER_PDK_ROOT:$USER_PDK_ROOT" \
+    -e PDK_ROOT="$USER_PDK_ROOT" \
+    -e PDK=sky130A \
+    --user $USER_ID:$GROUP_ID \
+    --network host \
+    ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64 \
+    bash -c "./flow.tcl -design $DESIGN"
 
 # Capture the exit status
 if [ $? -eq 0 ]; then

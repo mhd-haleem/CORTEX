@@ -20,19 +20,32 @@ MAX_ITERATIONS="3"
 DESIGN="my_design"
 PARSER_SCRIPT="rtl_parser.py"
 
-# --- Define Target RTL Files Array ---
-RTL_FILES=(
-    "RTL_Optimize/DUT/xbar_3by3_bencmark_top.v"
-    "RTL_Optimize/DUT/rptr_empty.v"
-    "RTL_Optimize/DUT/top_fifo.v"
-)
+# --- Target RTL Files Array (Dynamically populated later from parser output) ---
+RTL_FILES=()
 
 # Dynamically set paths so anyone can run this
-OPENLANE_DIR=$(pwd)
+OPENLANE_DIR="$(pwd)/OpenLane"
 # Use the user's PDK_ROOT if exported, otherwise default to ~/.ciel
 USER_PDK_ROOT=${PDK_ROOT:-$HOME/.ciel}
 USER_ID=$(id -u)
 GROUP_ID=$(id -g)
+
+echo "========================================"
+echo " Setting Up Golden RTL Backup"
+echo "========================================"
+
+# Create a backup of the original RTL files before any LLM modification
+BACKUP_DIR="$OPENLANE_DIR/RTL_Backup"
+
+if [ ! -d "$BACKUP_DIR" ]; then
+    echo "Creating backup of initial RTL files at $BACKUP_DIR..."
+    mkdir -p "$BACKUP_DIR"
+    cp -r "$OPENLANE_DIR/designs/$DESIGN/src" "$BACKUP_DIR/"
+    echo "[SUCCESS] Golden RTL safely backed up."
+else
+    echo "[INFO] RTL backup already exists at $BACKUP_DIR."
+    echo "       (Preserving original golden files.)"
+fi
 
 echo "========================================"
 echo " Starting OpenLane Synthesis"
@@ -51,13 +64,16 @@ echo "Running in: $OPENLANE_DIR"
 echo "Using PDK: $USER_PDK_ROOT"
 
 docker run --rm \
-    -v "$OPENLANE_DIR/designs:/openlane/designs" \
+    -v "$OPENLANE_DIR:/openlane" \
+    -v "$OPENLANE_DIR/designs:/openlane/install" \
+    -v "$HOME:$HOME" \
     -v "$USER_PDK_ROOT:$USER_PDK_ROOT" \
     -e PDK_ROOT="$USER_PDK_ROOT" \
     -e PDK=sky130A \
     --user $USER_ID:$GROUP_ID \
+    --network host \
     ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64 \
-    ./flow.tcl -design $DESIGN
+    bash -c "./flow.tcl -design $DESIGN"
 
 # Capture the exit status
 if [ $? -eq 0 ]; then
@@ -94,6 +110,34 @@ python3 "$PARSER_SCRIPT" \
     --netlist "$YOSYS_MAP" \
     --src_dir "$SRC_DIR" \
     --out_dir "llm_context"
+    
+# ========================================
+# 4. Build Dynamic RTL_FILES Array & Sync to DUT
+# ========================================
+mkdir -p RTL_Optimize/DUT
+
+RTL_FILES=()
+for file in llm_context/*.v llm_context/*.sv 2>/dev/null; do
+    if [ -f "$file" ]; then
+        basename_file=$(basename "$file")
+        
+        # Copy file into RTL_Optimize/DUT/ folder for the workflow script
+        cp "$file" "RTL_Optimize/DUT/$basename_file"
+        
+        # Format path into RTL_FILES array
+        RTL_FILES+=("RTL_Optimize/DUT/$basename_file")
+    fi
+done
+
+echo ""
+echo "========================================"
+echo " Dynamic array 'RTL_FILES' configured!"
+echo " Target bottleneck files (${#RTL_FILES[@]} total):"
+for f in "${RTL_FILES[@]}"; do
+    echo "  -> $f"
+done
+echo "========================================"
+echo ""
 
 read -p "Proceed with sending this JSON and the required RTL files to the LLM? (y/n): " confirm
 if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
@@ -119,7 +163,7 @@ fi
 
 # --- 1. Array & File Verification ---
 if [[ ${#RTL_FILES[@]} -eq 0 ]]; then
-    echo -e "${RED}[ERROR] RTL_FILES array is empty. Define at least one RTL source file.${NC}"
+    echo -e "${RED}[ERROR] RTL_FILES array is empty. No bottleneck files found in 'llm_context/'.${NC}"
     exit 1
 fi
 

@@ -228,7 +228,7 @@ def extract_file_lines(filepath, start_line, end_line, src_dir=None, context=3):
     return "".join(snippet_lines)
 
 
-def generate_rtl_snippets_file(llm_payload_json, output_filename="critical_rtl_snippets.md", src_dir=None):
+def generate_rtl_snippets_file(llm_payload_json, output_filename, src_dir=None):
     """Extracts unique Verilog blocks and formats them into Markdown."""
     if isinstance(llm_payload_json, str):
         payload = json.loads(llm_payload_json)
@@ -262,19 +262,39 @@ def generate_rtl_snippets_file(llm_payload_json, output_filename="critical_rtl_s
     with open(output_filename, 'w') as f:
         f.write(markdown_content)
 
-def extract_required_source_files(llm_payload_json):
-    """Parses the payload and returns a list of unique, full source files the LLM needs."""
+
+def get_bottleneck_leaf_files(llm_payload_json, src_dir=None):
+    """
+    Extracts the innermost "leaf" modules from the Yosys hierarchy traces,
+    heavily prioritizing the Endpoint (capture register) where the deep 
+    arithmetic logic settles, followed by the Startpoint.
+    """
     payload = json.loads(llm_payload_json) if isinstance(llm_payload_json, str) else llm_payload_json
-    required_files = set()
+    target_files = []
     
     for violation in payload:
-        for key in ["startpoint", "endpoint"]:
-            src = violation[key].get("rtl_source", "")
+        # 1. Grab sources, prioritizing Endpoint over Startpoint
+        ep_src = violation["endpoint"].get("rtl_source", "")
+        sp_src = violation["startpoint"].get("rtl_source", "")
+        
+        for src in [ep_src, sp_src]:
             traces = parse_yosys_src_string(src)
-            for filepath, _, _ in traces:
-                required_files.add(filepath)
+            if traces:
+                # 2. The LAST item in the trace is the actual innermost leaf module
+                leaf_filepath = traces[-1][0] 
                 
-    return list(required_files)
+                if leaf_filepath not in target_files:
+                    target_files.append(leaf_filepath)
+                    
+    # 3. Resolve to actual local host paths
+    resolved_paths = []
+    for f in target_files:
+        resolved = resolve_filepath(f, src_dir)
+        if resolved and resolved not in resolved_paths:
+            resolved_paths.append(resolved)
+            
+    return resolved_paths
+
 
 # ============================================================
 # COMMAND-LINE INTERFACE
@@ -283,7 +303,7 @@ def extract_required_source_files(llm_payload_json):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description="Parse OpenSTA violations, map them to RTL using Yosys JSON, and extract code snippets."
+        description="Parse OpenSTA violations, map them to RTL using Yosys JSON, and extract code to a folder."
     )
 
     parser.add_argument(
@@ -305,38 +325,85 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--out_dir",
+        default="llm_context",
+        help="Output folder where all LLM payload files will be saved (default: llm_context)"
+    )
+
+    parser.add_argument(
         "--out_json",
         default="llm_payload.json",
-        help="Output JSON file (default: llm_payload.json)"
+        help="Output JSON filename (saved inside out_dir)"
     )
 
     parser.add_argument(
         "--out_snippets",
         default="critical_rtl_snippets.md",
-        help="Output Markdown file for RTL snippets (default: critical_rtl_snippets.md)"
+        help="Output Markdown filename for RTL snippets (saved inside out_dir)"
     )
 
     args = parser.parse_args()
 
     try:
+        # 0. Create the output directory
+        os.makedirs(args.out_dir, exist_ok=True)
+        
+        json_path = os.path.join(args.out_dir, args.out_json)
+        snippets_path = os.path.join(args.out_dir, args.out_snippets)
+
         # 1. Generate JSON Payload
         payload = generate_llm_payload(args.sta, args.netlist)
 
-        with open(args.out_json, "w") as f:
+        with open(json_path, "w") as f:
             f.write(payload)
 
-        # 2. Extract Verilog Snippets to Markdown using the local src directory path
-        generate_rtl_snippets_file(payload, args.out_snippets, src_dir=args.src_dir)
+        # 2. Extract Verilog Snippets to Markdown
+        generate_rtl_snippets_file(payload, snippets_path, src_dir=args.src_dir)
+        
+        # 3. Find the innermost leaf modules and write them to the folder with exact original names
+        top_files = get_bottleneck_leaf_files(payload, args.src_dir)
+        copied_files = []
+        
+        if top_files:
+            for filepath in top_files:
+                if os.path.exists(filepath):
+                    # Get the exact filename (e.g., 'output_port_3by3.v')
+                    original_filename = os.path.basename(filepath)
+                    target_filepath = os.path.join(args.out_dir, original_filename)
+                    
+                    # Read the actual Verilog code
+                    with open(filepath, "r") as pf:
+                        full_rtl_code = pf.read()
+                        
+                    # Write the code into the new standalone file
+                    with open(target_filepath, "w") as f:
+                        f.write(f"// ==========================================\n")
+                        f.write(f"// BOTTLENECK LEAF MODULE\n")
+                        f.write(f"// Original File: {filepath}\n")
+                        f.write(f"// ==========================================\n\n")
+                        f.write(full_rtl_code)
+                        
+                    copied_files.append(original_filename)
 
         payload_data = json.loads(payload)
 
-        print("\n[SUCCESS] Parsing and Extraction Complete!")
+        print(f"\n[SUCCESS] Parsing and Extraction Complete!")
         print(f"  - STA Report       : {args.sta}")
         print(f"  - Yosys Netlist    : {args.netlist}")
-        print(f"  - RTL Source Dir   : {args.src_dir}")
         print(f"  - Violating Paths  : {len(payload_data)}")
-        print(f"  - Output JSON      : {args.out_json}")
-        print(f"  - Output Snippets  : {args.out_snippets}\n")
+        
+        print(f"\n📁 All outputs saved to directory: ./{args.out_dir}/")
+        print(f"  --> {args.out_json}")
+        print(f"  --> {args.out_snippets}")
+        
+        if copied_files:
+            print("  --> Copied Bottleneck RTL Files:")
+            for cf in copied_files:
+                print(f"        - {cf}")
+        else:
+            print("  --> No critical RTL files identified.")
+            
+        print("")
 
     except FileNotFoundError as e:
         print(f"Error: File not found: {e}")

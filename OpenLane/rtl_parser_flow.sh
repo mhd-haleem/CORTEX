@@ -27,24 +27,21 @@ if [ ! -d "$USER_PDK_ROOT" ]; then
     echo "If your PDK is located elsewhere, run: export PDK_ROOT=/path/to/your/pdk"
     exit 1
 fi
-
 # 1. Run OpenLane Synthesis Non-Interactively
 echo "Executing OpenLane non-interactively..."
 echo "Running in: $OPENLANE_DIR"
 echo "Using PDK: $USER_PDK_ROOT"
 
 docker run --rm \
-    -v "$OPENLANE_DIR:/openlane" \
-    -v "$OPENLANE_DIR/designs:/openlane/install" \
-    -v "$HOME:$HOME" \
+    -v "$OPENLANE_DIR/designs:/openlane/designs" \
     -v "$USER_PDK_ROOT:$USER_PDK_ROOT" \
     -e PDK_ROOT="$USER_PDK_ROOT" \
     -e PDK=sky130A \
     --user $USER_ID:$GROUP_ID \
-    --network host \
     ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64 \
-    bash -c "./flow.tcl -design $DESIGN"
+    ./flow.tcl -design $DESIGN
 
+    
 # Capture the exit status
 if [ $? -eq 0 ]; then
     echo "[SUCCESS] Flow completed successfully. No optimization required."

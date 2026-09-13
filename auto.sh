@@ -12,9 +12,9 @@ NC='\033[0m' # No Color
 
 # --- Configuration & Defaults ---
 PYTHON_SCRIPT="RTL_Optmize/modify_rtl.py" # Update this to your Python script name
-RTL_FILE="RTL_Optmize/axi_lite_slave.v"
+RTL_FILE="RTL_Optmize/target_file.v"
 PROMPT_FILE="RTL_Optmize/prompt.txt"
-JSON_FILE="RTL_Optmize/config.json"
+JSON_FILE="RTL_Optmize/llm_payload.json"
 MAX_ITERATIONS="3"
 
 # --- 1. Usage Validation ---

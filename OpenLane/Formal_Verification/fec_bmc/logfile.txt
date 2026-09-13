@@ -1,0 +1,53 @@
+SBY 15:31:15 [fec_bmc] Removing directory '/openlane/Formal_Verification/fec_bmc'.
+SBY 15:31:15 [fec_bmc] Copy '/openlane/Formal_Verification/output_port_3by3.v' to '/openlane/Formal_Verification/fec_bmc/src/output_port_3by3.v'.
+SBY 15:31:15 [fec_bmc] Copy '/openlane/Formal_Verification/output_port_3by3_opt.v' to '/openlane/Formal_Verification/fec_bmc/src/output_port_3by3_opt.v'.
+SBY 15:31:15 [fec_bmc] Copy '/openlane/Formal_Verification/sec_wrapper.sv' to '/openlane/Formal_Verification/fec_bmc/src/sec_wrapper.sv'.
+SBY 15:31:15 [fec_bmc] engine_0: smtbmc boolector
+SBY 15:31:15 [fec_bmc] base: starting process "cd fec_bmc/src; yosys -ql ../model/design.log ../model/design.ys"
+SBY 15:31:15 [fec_bmc] base: Warning: Replacing memory \g_valid_out_pipe with list of registers. See sec_wrapper.sv:64
+SBY 15:31:15 [fec_bmc] base: Warning: Replacing memory \g_data_out_pipe with list of registers. See sec_wrapper.sv:63
+SBY 15:31:16 [fec_bmc] base: finished (returncode=0)
+SBY 15:31:16 [fec_bmc] prep: starting process "cd fec_bmc/model; yosys -ql design_prep.log design_prep.ys"
+SBY 15:31:16 [fec_bmc] prep: finished (returncode=0)
+SBY 15:31:16 [fec_bmc] smt2: starting process "cd fec_bmc/model; yosys -ql design_smt2.log design_smt2.ys"
+SBY 15:31:16 [fec_bmc] smt2: finished (returncode=0)
+SBY 15:31:16 [fec_bmc] engine_0: starting process "cd fec_bmc; yosys-smtbmc -s boolector --presat --unroll --noprogress -t 15  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2"
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Solver: boolector
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 0..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 0..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 1..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 1..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 2..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 2..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 3..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 3..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 4..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 4..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 5..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 5..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 6..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 6..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 7..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 7..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 8..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 8..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 9..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 9..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 10..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 10..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 11..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 11..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 12..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 12..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 13..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 13..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assumptions in step 14..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Checking assertions in step 14..
+SBY 15:31:16 [fec_bmc] engine_0: ##   0:00:00  Status: passed
+SBY 15:31:16 [fec_bmc] engine_0: finished (returncode=0)
+SBY 15:31:16 [fec_bmc] engine_0: Status returned by engine: pass
+SBY 15:31:16 [fec_bmc] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:01 (1)
+SBY 15:31:16 [fec_bmc] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:01 (1)
+SBY 15:31:16 [fec_bmc] summary: engine_0 (smtbmc boolector) returned pass
+SBY 15:31:16 [fec_bmc] summary: engine_0 did not produce any traces
+SBY 15:31:16 [fec_bmc] DONE (PASS, rc=0)

@@ -362,7 +362,9 @@ if __name__ == "__main__":
         
         # 3. Find the innermost leaf modules and write them to the folder with exact original names
         top_files = get_bottleneck_leaf_files(payload, args.src_dir)
-        copied_files = []
+        
+        # THIS IS YOUR ARRAY:
+        rtl_files = [] 
         
         if top_files:
             for filepath in top_files:
@@ -383,7 +385,8 @@ if __name__ == "__main__":
                         f.write(f"// ==========================================\n\n")
                         f.write(full_rtl_code)
                         
-                    copied_files.append(original_filename)
+                    # Append the name to the python array
+                    rtl_files.append(original_filename)
 
         payload_data = json.loads(payload)
 
@@ -396,9 +399,9 @@ if __name__ == "__main__":
         print(f"  --> {args.out_json}")
         print(f"  --> {args.out_snippets}")
         
-        if copied_files:
+        if rtl_files:
             print("  --> Copied Bottleneck RTL Files:")
-            for cf in copied_files:
+            for cf in rtl_files:
                 print(f"        - {cf}")
         else:
             print("  --> No critical RTL files identified.")

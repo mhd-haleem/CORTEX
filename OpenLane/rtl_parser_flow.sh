@@ -17,6 +17,23 @@ USER_ID=$(id -u)
 GROUP_ID=$(id -g)
 
 echo "========================================"
+echo " Setting Up Golden RTL Backup"
+echo "========================================"
+
+# Create a backup of the original RTL files before any LLM modification
+BACKUP_DIR="$OPENLANE_DIR/RTL_Backup"
+
+if [ ! -d "$BACKUP_DIR" ]; then
+    echo "Creating backup of initial RTL files at $BACKUP_DIR..."
+    mkdir -p "$BACKUP_DIR"
+    cp -r "$OPENLANE_DIR/designs/$DESIGN/src" "$BACKUP_DIR/"
+    echo "[SUCCESS] Golden RTL safely backed up."
+else
+    echo "[INFO] RTL backup already exists at $BACKUP_DIR."
+    echo "       (Preserving original golden files.)"
+fi
+
+echo "========================================"
 echo " Starting OpenLane Synthesis"
 echo "========================================"
 
@@ -26,21 +43,24 @@ if [ ! -d "$USER_PDK_ROOT" ]; then
     echo "If your PDK is located elsewhere, run: export PDK_ROOT=/path/to/your/pdk"
     exit 1
 fi
+
 # 1. Run OpenLane Synthesis Non-Interactively
 echo "Executing OpenLane non-interactively..."
 echo "Running in: $OPENLANE_DIR"
 echo "Using PDK: $USER_PDK_ROOT"
 
 docker run --rm \
-    -v "$OPENLANE_DIR/designs:/openlane/designs" \
+    -v "$OPENLANE_DIR:/openlane" \
+    -v "$OPENLANE_DIR/designs:/openlane/install" \
+    -v "$HOME:$HOME" \
     -v "$USER_PDK_ROOT:$USER_PDK_ROOT" \
     -e PDK_ROOT="$USER_PDK_ROOT" \
     -e PDK=sky130A \
     --user $USER_ID:$GROUP_ID \
+    --network host \
     ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64 \
-    ./flow.tcl -design $DESIGN
+    bash -c "./flow.tcl -design $DESIGN"
 
-    
 # Capture the exit status
 if [ $? -eq 0 ]; then
     echo "[SUCCESS] Flow completed successfully. No optimization required."

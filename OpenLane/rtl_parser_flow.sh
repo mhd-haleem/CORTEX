@@ -97,6 +97,27 @@ python3 "$PARSER_SCRIPT" \
     --src_dir "$SRC_DIR" \
     --out_dir "llm_context"
     
+# ========================================
+# 4. Build Bash Array of Bottleneck Files
+# ========================================
+# Dynamically collect all .v or .sv files dumped into the llm_context folder
+rtl_bottlenecks=()
+for file in llm_context/*.v llm_context/*.sv 2>/dev/null; do
+    if [ -f "$file" ]; then
+        # Extract just the filename (e.g., output_port_3by3.v) and add to array
+        rtl_bottlenecks+=("$(basename "$file")")
+    fi
+done
+
+echo ""
+echo "========================================"
+echo " Bash Array 'rtl_bottlenecks' ready!"
+echo " Contains ${#rtl_bottlenecks[@]} files:"
+for f in "${rtl_bottlenecks[@]}"; do
+    echo "  -> $f"
+done
+echo "========================================"
+echo ""
 
 
 read -p "Proceed with sending this JSON and the required RTL files to the LLM? (y/n): " confirm
@@ -106,3 +127,9 @@ if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
 fi
 
 echo "User confirmed! (The script stops here for now)"
+
+# EXAMPLE LLM API LOOP:
+# for filename in "${rtl_bottlenecks[@]}"; do
+#     FILE_CONTENT=$(cat "llm_context/$filename")
+#     # curl -X POST ...
+# done

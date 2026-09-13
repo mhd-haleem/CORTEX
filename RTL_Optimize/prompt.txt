@@ -7,6 +7,7 @@ OUTPUT FORMAT (CRITICAL):
 - NO MARKDOWN: Do not wrap the code in ```verilog or ``` code blocks.
 - NO EXPLANATIONS: Do not output any conversational text, greetings, or explanations before or after the code.
 - PURE CODE ONLY: The very first word of your output MUST be `module`. The very last word of your output MUST be `endmodule`.
+- Do not generate any additional modules other than the ones provided. 
 
 1. SYNTAX & LANGUAGE CONSTRAINTS
 - Verilog-2005 Only: You must strictly use Verilog-2005 (IEEE 1364-2005).

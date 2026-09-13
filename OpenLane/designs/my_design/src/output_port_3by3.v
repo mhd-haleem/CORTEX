@@ -64,65 +64,33 @@ module output_port_3by3 #(
                                           grant[1] ? rdata_1 :
                                           grant[2] ? rdata_2 : {DATA_WIDTH{1'b0}};
 
-    // --- AI OPTIMIZED PIPELINE BLOCK ---
+    // --- CRITICAL PATH INJECTION BLOCK ---
+    // Deep multi-stage cascaded combinational arithmetic chain.
+    // This creates the timing violations for the GenAI tool to pipeline/retime.
     reg [DATA_WIDTH-1:0] processed_comb;
-    reg [63:0] stage1, stage2, stage3, stage4, stage5, stage6;
-    reg [63:0] stage7, stage8, stage9, stage10, stage11;
-
-    always @(posedge clk_out or negedge rst_n) begin
-      if (!rst_n) begin
-        stage1 <= 64'h0;
-        stage2 <= 64'h0;
-        stage3 <= 64'h0;
-        stage4 <= 64'h0;
-        stage5 <= 64'h0;
-        stage6 <= 64'h0;
-        stage7 <= 64'h0;
-        stage8 <= 64'h0;
-        stage9 <= 64'h0;
-        stage10 <= 64'h0;
-        stage11 <= 64'h0;
-        processed_comb <= 64'h0;
-      end else begin
-        stage1 <= (selected_data ^ (selected_data << 3)) + 64'hA5A5A5A5_5A5A5A5A;
-        stage2 <= (stage1 ^ (stage1 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd7);
-        stage3 <= (stage2 ^ (stage2 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd14);
-        stage4 <= (stage3 ^ (stage3 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd21);
-        stage5 <= (stage4 ^ (stage4 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd28);
-        stage6 <= (stage5 ^ (stage5 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd35);
-        stage7 <= (stage6 ^ (stage6 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd42);
-        stage8 <= (stage7 ^ (stage7 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd49);
-        stage9 <= (stage8 ^ (stage8 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd56);
-        stage10 <= (stage9 ^ (stage9 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd63);
-        stage11 <= (stage10 ^ (stage10 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd70);
-        processed_comb <= (stage11 ^ (stage11 << 3)) + (64'hA5A5A5A5_5A5A5A5A + 64'd77);
-      end
+    integer step;
+    always @(*) begin
+        processed_comb = selected_data;
+        for (step = 0; step < 12; step = step + 1) begin
+            processed_comb = (processed_comb ^ (processed_comb << 3)) + 64'hA5A5A5A5_5A5A5A5A + (step * 7);
+        end
     end
-
-    // --- LATENCY COMPENSATING CONTROL PATH ---
-    reg [11:0] valid_pipe; // 12-cycle shift register for valid signal
 
     // Output Registers
     always @(posedge clk_out or negedge rst_n) begin
         if (!rst_n) begin
-            data_out   <= {DATA_WIDTH{1'b0}};
-            valid_out  <= 1'b0;
-            valid_pipe <= 12'b0;
-            ptr        <= 2'd0;
+            data_out  <= {DATA_WIDTH{1'b0}};
+            valid_out <= 1'b0;
+            ptr       <= 2'd0;
         end else begin
-            // 1. Shift the current grant status into the delay pipe
-            valid_pipe <= {valid_pipe[10:0], |grant};
-            
-            // 2. The output valid signal fires 12 cycles later
-            valid_out <= valid_pipe[11];
-            
-            // 3. Data continuously flows out, but is only "valid" when valid_out is high
-            data_out <= processed_comb;
-
-            // Move Round-Robin Pointer (This still happens immediately)
-            if      (grant[0]) ptr <= 2'd1;
-            else if (grant[1]) ptr <= 2'd2;
-            else if (grant[2]) ptr <= 2'd0;
+            valid_out <= |grant;
+            if (|grant) begin
+                data_out <= processed_comb;
+                // Move Round-Robin Pointer
+                if      (grant[0]) ptr <= 2'd1;
+                else if (grant[1]) ptr <= 2'd2;
+                else if (grant[2]) ptr <= 2'd0;
+            end
         end
     end
 endmodule

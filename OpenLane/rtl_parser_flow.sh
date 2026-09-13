@@ -7,8 +7,7 @@
 DESIGN="my_design" 
 
 PARSER_SCRIPT="rtl_parser.py"
-PARSER_JSON_OUT="llm_payload.json"
-RTL_FILES_OUT="critical_rtl_snippets.md"
+
 
 # Dynamically set paths so anyone can run this
 OPENLANE_DIR=$(pwd)
@@ -65,35 +64,23 @@ fi
 
 echo "Using latest run directory: $LATEST_RUN"
 
-# Standard OpenLane paths for the needed files (Verify these match your OpenLane version)
+# Standard OpenLane paths for the needed files
 SYNTH_REPORT="$LATEST_RUN/reports/synthesis/2-syn_sta.max.rpt"
-YOSYS_MAP=$(ls $LATEST_RUN/results/synthesis/*.json | head -1)
-SRC_DIR="designs/$DESIGN/src"
+YOSYS_MAP=$(ls "$LATEST_RUN/results/synthesis/"*.json | head -1)
+SRC_DIR="$OPENLANE_DIR/designs/$DESIGN/src"
 
 echo "========================================"
 echo " Running Parser..."
 echo "========================================"
 
-# 3. Run the Parser with EXACT arguments matching the Python script
-python3 $PARSER_SCRIPT \
+# 3. Run the Parser to dump everything into the 'llm_context' folder
+python3 "$PARSER_SCRIPT" \
     --sta "$SYNTH_REPORT" \
     --netlist "$YOSYS_MAP" \
     --src_dir "$SRC_DIR" \
-    --out_json "$PARSER_JSON_OUT" \
-    --out_snippets "$RTL_FILES_OUT"
+    --out_dir "llm_context"
+    
 
-# 4. Display Output and Confirm
-echo "========================================"
-echo " 📄 PARSER JSON OUTPUT ($PARSER_JSON_OUT):"
-echo "========================================"
-cat $PARSER_JSON_OUT
-echo ""
-echo "========================================"
-echo " 📄 RTL SNIPPETS EXTRACTED:"
-echo "========================================"
-cat $RTL_FILES_OUT
-echo ""
-echo "========================================"
 
 read -p "Proceed with sending this JSON and the required RTL files to the LLM? (y/n): " confirm
 if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then

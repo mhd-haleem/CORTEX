@@ -1,4 +1,4 @@
-# Version 4 : Multi-RTL Syntax Optimization and Feedback Loop
+# Version 5: Multi-RTL Optimization with Combined FEC JSON Extraction & Syntax Feedback Loop
 
 import argparse
 import json
@@ -16,40 +16,38 @@ API_KEY = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
 
-def extract_single_code(llm_response: str) -> str:
-    """Extracts raw Verilog/SystemVerilog code block from markdown fences safely."""
+def parse_combined_json_response(llm_response: str) -> tuple[dict[str, str], dict]:
+    """
+    Parses the raw JSON response from Gemini containing 'modified_rtl' and 'fec_config'.
+    Strips Markdown code fences if the LLM accidentally includes them.
+    Returns: (modified_rtl_dict, fec_config_dict)
+    """
     if not llm_response:
-        return ""
-    pattern = r"```(?:verilog|systemverilog|vlog)?\s*\n(.*?)```"
-    match = re.search(pattern, llm_response, re.DOTALL | re.IGNORECASE)
-    if match:
-        return match.group(1).strip()
-    return llm_response.strip()
+        return {}, {}
 
+    clean_text = llm_response.strip()
 
-def extract_multiple_codes(llm_response: str, source_files: list[str]) -> dict[str, str]:
-    """
-    Extracts code blocks tagged by filename from LLM response.
-    Falls back to single code block extraction if only one file is processed.
-    """
-    extracted = {}
-    expected_basenames = [os.path.basename(f) for f in source_files]
+    # Strip triple backticks or markdown fences if present
+    if clean_text.startswith("```"):
+        clean_text = re.sub(r"^```(?:json)?\s*", "", clean_text, flags=re.IGNORECASE)
+        clean_text = re.sub(r"\s*```$", "", clean_text).strip()
 
-    # Pattern matches: FILE: filename.v followed by code block
-    pattern = r"FILE:\s*([^\n\r]+)\s*```(?:verilog|systemverilog|vlog)?\s*\n(.*?)```"
-    matches = re.findall(pattern, llm_response, re.DOTALL | re.IGNORECASE)
-
-    for fn_match, code_match in matches:
-        clean_fn = os.path.basename(fn_match.strip())
-        extracted[clean_fn] = code_match.strip()
-
-    # Fallback if single file and header tag was omitted by LLM
-    if len(expected_basenames) == 1 and expected_basenames[0] not in extracted:
-        code = extract_single_code(llm_response)
-        if code:
-            extracted[expected_basenames[0]] = code
-
-    return extracted
+    try:
+        data = json.loads(clean_text)
+        modified_rtl = data.get("modified_rtl", {})
+        fec_config = data.get("fec_config", {})
+        return modified_rtl, fec_config
+    except json.JSONDecodeError as e:
+        # Fallback regex extraction if leading/trailing whitespace breaks direct parse
+        match = re.search(r"(\{.*\})", clean_text, re.DOTALL)
+        if match:
+            try:
+                data = json.loads(match.group(1))
+                return data.get("modified_rtl", {}), data.get("fec_config", {})
+            except json.JSONDecodeError:
+                pass
+        print(f"[ERROR] Failed to parse JSON response from LLM: {e}")
+        return {}, {}
 
 
 def run_eda_parser(filenames: list[str]) -> tuple[bool, str]:
@@ -61,7 +59,7 @@ def run_eda_parser(filenames: list[str]) -> tuple[bool, str]:
     cmd = ["iverilog", "-g2012", "-o", output_dev] + filenames
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
         return True, "Icarus Verilog compilation passed without syntax errors."
     except subprocess.CalledProcessError as e:
         error_log = e.stdout + "\n" + e.stderr
@@ -81,12 +79,16 @@ def send_message_with_retry(chat, prompt: str, max_retries=3, backoff_seconds=5)
             else:
                 raise e
 
+
 def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_data: dict, max_iterations=3) -> bool:
     base_opt_dir = "RTL_Optimize"
     iter_dir = os.path.join(base_opt_dir, "iter")
     dut_dir = os.path.join(base_opt_dir, "DUT")
+    fv_dir = os.path.join("OpenLane", "Formal_Verification")
+
     os.makedirs(iter_dir, exist_ok=True)
     os.makedirs(dut_dir, exist_ok=True)
+    os.makedirs(fv_dir, exist_ok=True)
 
     rtl_sections = []
     for filepath in source_files:
@@ -104,44 +106,45 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
     json_str = json.dumps(json_data, indent=2)
 
     print(f"[*] Loaded {len(source_files)} RTL file(s) into {dut_dir}.")
-    print(f"[*] Initializing chat loop with gemini-3.6-flash...")
+    print(f"[*] Initializing chat session with Gemini...")
     chat = client.chats.create(model="gemini-3.6-flash")
 
     system_instruction = (
-        "You are an expert RTL hardware engineer. Your task is to modify the provided Verilog/SystemVerilog code "
+        "You are an expert RTL hardware engineer. Your task is to modify the provided Verilog code "
         "according to the user's modification request and the specifications in the provided JSON file.\n\n"
-        "IMPORTANT: You MUST return the updated code for EVERY file provided. Format each file explicitly as:\n"
-        "FILE: <filename>\n"
-        "```verilog\n"
-        "<updated code for this file>\n"
-        "```\n"
-        "Do not provide long textual explanations."
+        "IMPORTANT: You MUST return a single, raw valid JSON object with top-level keys 'modified_rtl' "
+        "and 'fec_config'. Do NOT wrap the output in Markdown code blocks (no ```json). "
+        "Do NOT provide any conversational explanations before or after the JSON."
     )
 
     full_prompt = (
         f"{system_instruction}\n\n"
-        f"--- Existing Verilog/SystemVerilog Files ---\n"
+        f"--- Existing Verilog Files ---\n"
         f"{combined_rtl_str}\n\n"
-        f"--- JSON Context / Specifications ---\n"
+        f"--- Timing JSON Context / Specifications ---\n"
         f"```json\n{json_str}\n```\n\n"
         f"--- Modification Request ---\n"
         f"{modification_prompt}"
     )
 
     for iteration in range(1, max_iterations + 1):
-        print(f"\n[Iteration {iteration}/{max_iterations}] Querying Gemini for updates...")
+        print(f"\n[Iteration {iteration}/{max_iterations}] Querying Gemini for RTL updates and FEC config...")
         response = send_message_with_retry(chat, full_prompt)
 
-        extracted_codes = extract_multiple_codes(response.text, source_files)
+        modified_rtl_dict, fec_config_dict = parse_combined_json_response(response.text)
 
+        if not modified_rtl_dict:
+            print(f"[!] Warning: No RTL code extracted on iteration {iteration}.")
+
+        # Write RTL files to DUT and iter directories
         for src_file in source_files:
             basename = os.path.basename(src_file)
             file_base, file_ext = os.path.splitext(basename)
             iter_filename = os.path.join(iter_dir, f"{file_base}_mod_iter{iteration}{file_ext}")
             dut_filename = os.path.join(dut_dir, basename)
 
-            code_to_write = extracted_codes.get(basename, "")
-            
+            code_to_write = modified_rtl_dict.get(basename, "")
+
             # Save iteration snapshot
             with open(iter_filename, "w", encoding="utf-8") as f:
                 f.write(code_to_write)
@@ -150,7 +153,18 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
             with open(dut_filename, "w", encoding="utf-8") as f:
                 f.write(code_to_write)
 
-            print(f"[+] Saved iteration snapshot: {iter_filename}")
+            print(f"[+] Saved updated RTL snapshot: {iter_filename}")
+
+        # Save fec_config.json for Python formal wrapper generator
+        fec_dest_primary = os.path.join(fv_dir, "fec_config.json")
+        fec_dest_backup = os.path.join(base_opt_dir, "fec_config.json")
+
+        with open(fec_dest_primary, "w", encoding="utf-8") as f:
+            json.dump(fec_config_dict, f, indent=2)
+        with open(fec_dest_backup, "w", encoding="utf-8") as f:
+            json.dump(fec_config_dict, f, indent=2)
+
+        print(f"[+] Successfully extracted and saved 'fec_config.json' -> {fec_dest_primary}")
 
         # Gather ALL .v and .sv files currently in RTL_Optimize/DUT for syntax check
         dut_files = [
@@ -159,31 +173,32 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
             if f.endswith((".v", ".sv"))
         ]
 
-        print(f"[*] Running iverilog parser on all DUT files ({len(dut_files)} total)...")
+        print(f"[*] Running iverilog parser on DUT files ({len(dut_files)} total)...")
         success, compiler_message = run_eda_parser(dut_files)
 
         if success:
-            print(f"\n[SUCCESS] Verification passed on iteration {iteration}!")
+            print(f"\n[SUCCESS] Syntax verification passed on iteration {iteration}!")
             print(compiler_message)
-            print(f"[+] All updated RTL files verified successfully in: {dut_dir}")
+            print(f"[+] Verified RTL available in: {dut_dir}")
             return True
         else:
-            print(f"[!] Compilation failed. Feedback loop triggered.")
+            print(f"[!] Compilation failed. Triggering Gemini feedback loop...")
             print(f"Compiler Log Snippet:\n---\n{compiler_message}\n---")
 
             full_prompt = (
                 f"The modified code generated in iteration {iteration} failed compilation with the following errors:\n"
                 f"```\n{compiler_message}\n```\n"
-                f"Please fix all syntax and structural errors reported above and return updated versions of ALL files using the exact format:\n"
-                f"FILE: <filename>\n```verilog\n<code>\n```"
+                f"Please fix all syntax and structural errors reported above and return a single valid JSON object "
+                f"containing 'modified_rtl' and 'fec_config'."
             )
 
     print(f"\n[FAILURE] Reached maximum iterations ({max_iterations}) without resolving all syntax errors.")
     return False
 
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Modify multiple Verilog files using Gemini and verify syntax with Icarus Verilog."
+        description="Modify Verilog files using Gemini and extract FEC JSON config."
     )
     parser.add_argument(
         "rtl_files",

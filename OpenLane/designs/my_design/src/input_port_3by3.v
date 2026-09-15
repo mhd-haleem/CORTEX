@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module input_port_3by3 #(
-    parameter DATA_WIDTH = 64
+    parameter DATA_WIDTH = 4
 )(
     input  wire [DATA_WIDTH-1:0] data_in,
     input  wire                  valid_in,

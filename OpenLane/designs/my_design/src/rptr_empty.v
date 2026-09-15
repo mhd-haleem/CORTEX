@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module rptr_empty #(
-    parameter ADDRSIZE = 4  // Memory address size (Depth = 16)
+    parameter ADDRSIZE = 2  // Memory address size (Depth = 16)
 ) (
     input  wire                rclk,
     input  wire                rrst_n,

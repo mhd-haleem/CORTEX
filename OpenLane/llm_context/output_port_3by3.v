@@ -6,7 +6,7 @@
 `timescale 1ns / 1ps
 
 module output_port_3by3 #(
-    parameter DATA_WIDTH = 64
+    parameter DATA_WIDTH = 4
 )(
     input  wire                  clk_out,
     input  wire                  rst_n,

@@ -17,8 +17,7 @@ You are an expert ASIC digital design engineer. Your task is to optimize the pro
 You must populate `fec_config` using EXACT Verilog port and module names from the RTL (no guessing):
 
 1. "modified_modules": Array of exact module names you altered (e.g., ["output_port_3by3"]). Do not list unmodified modules.
-2. "common_internal_outputs": Array of objects `{"name": "<exact_port>", "width": <int>}` for top-level non-interface outputs (e.g., `ready`, `fifo_full`, status signals). Exclude clocks, resets, data, and valid ports. Return `[]` if none exist.
-3. "interfaces": Dictionary of observable output interfaces to formally compare (`p0`, `p1`, etc.).
+2. "interfaces": Dictionary of observable output interfaces to formally compare (`p0`, `p1`, etc.).
    - Include `clock`, `reset`, `data` (`golden`, `revised`, `width`), `valid` (`golden`, `revised`), and `latency_diff`.
    - `latency_diff` = `revised_latency - golden_latency` (Integer: +N if revised is N cycles slower, 0 if equal). Do not confuse pipeline depth with observable interface latency.
 
@@ -30,13 +29,7 @@ You must populate `fec_config` using EXACT Verilog port and module names from th
   "fec_config": {
     "modified_modules": [
       "<modified_module_name>"
-    ],
-    "common_internal_outputs": [
-      {
-        "name": "<output_port>",
-        "width": 1
-      }
-    ],
+    ], 
     "interfaces": {
       "p0": {
         "clock": "<clk_port>",

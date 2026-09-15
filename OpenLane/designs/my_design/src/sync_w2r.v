@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module sync_w2r #(
-    parameter N = 5  
+    parameter N = 3  
 ) (
     input  wire         rclk,     // Read clock domain
     input  wire         rrst_n,   // Read domain active-low asynchronous reset

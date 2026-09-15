@@ -1,11 +1,11 @@
 # 1. Master Clocks 
-# (Aggressive 3.0ns period to force timing violations on our 12-stage arithmetic loop)
-create_clock -name clk_in_0  -period 15.0 [get_ports {clk_in_0}]
-create_clock -name clk_in_1  -period 14.0 [get_ports {clk_in_1}]
-create_clock -name clk_in_2  -period 25.0 [get_ports {clk_in_2}]
-create_clock -name clk_out_0 -period 20.0 [get_ports {clk_out_0}]
-create_clock -name clk_out_1 -period 18.0 [get_ports {clk_out_1}]
-create_clock -name clk_out_2 -period 23.0 [get_ports {clk_out_2}]
+# (Dialed to 4.7ns to push past the 4.76ns zero-slack threshold for minor violations)
+create_clock -name clk_in_0  -period 6.0 [get_ports {clk_in_0}]
+create_clock -name clk_in_1  -period 7.0 [get_ports {clk_in_1}]
+create_clock -name clk_in_2  -period 8.0 [get_ports {clk_in_2}]
+create_clock -name clk_out_0 -period 4.7 [get_ports {clk_out_0}]
+create_clock -name clk_out_1 -period 4.7 [get_ports {clk_out_1}]
+create_clock -name clk_out_2 -period 4.7 [get_ports {clk_out_2}]
 
 # 2. Generated Clocks (To satisfy the benchmark requirements)
 create_generated_clock -name clk_div2 -source [get_ports {clk_in_0}]  -divide_by 2 [get_ports {gen_clk_in0_div2}]

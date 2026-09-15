@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module sync_r2w #(
-    parameter N = 5  // N-bit pointer (size is N, not N-1, because we pass the MSB)
+    parameter N = 3  // N-bit pointer (size is N, not N-1, because we pass the MSB)
 ) (
     input  wire         wclk,     // Write clock domain
     input  wire         wrst_n,   // Write domain active-low asynchronous reset

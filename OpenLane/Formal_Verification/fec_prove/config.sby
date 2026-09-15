@@ -1,0 +1,42 @@
+[options]
+mode bmc
+depth 15
+
+[engines]
+smtbmc boolector
+
+[script]
+# ============================================================
+# 1. Compile Golden Hierarchy in an ISOLATED Workspace
+# ============================================================
+design -push
+read_verilog /home/basith/CORTEX/OpenLane/Formal_Verification/src/*.v
+prep -top xbar_3by3_benchmark_top
+flatten
+rename xbar_3by3_benchmark_top gold
+design -save gold_space
+design -pop
+
+# ============================================================
+# 2. Compile Revised Hierarchy in an ISOLATED Workspace
+# ============================================================
+design -push
+# The DUT folder must contain a complete copy of the crossbar
+read_verilog /home/basith/CORTEX/RTL_Optimize/DUT/*.v
+prep -top xbar_3by3_benchmark_top
+flatten
+rename xbar_3by3_benchmark_top revised
+design -save revised_space
+design -pop
+
+# ============================================================
+# 3. Merge the flattened modules into the main workspace
+# ============================================================
+design -copy-from gold_space gold
+design -copy-from revised_space revised
+
+# ============================================================
+# 4. Load the SEC Wrapper and Run the Proof
+# ============================================================
+read_verilog -sv /home/basith/CORTEX/OpenLane/Formal_Verification/generated/top_sec_wrapper.sv
+prep -top top_sec_wrapper

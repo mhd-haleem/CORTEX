@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module wptr_full #(
-    parameter ADDRSIZE = 4  // Memory address size (Depth = 16)
+    parameter ADDRSIZE = 2  // Memory address size (Depth = 16)
 ) (
     input  wire                wclk,
     input  wire                wrst_n,

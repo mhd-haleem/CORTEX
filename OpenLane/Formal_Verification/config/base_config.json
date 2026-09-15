@@ -1,0 +1,183 @@
+{
+    "golden_top": "gold",
+    "revised_top": "revised",
+    "common_inputs": [
+        {
+            "name": "clk_in_0",
+            "width": 1
+        },
+        {
+            "name": "rst_n_in_0",
+            "width": 1
+        },
+        {
+            "name": "clk_in_1",
+            "width": 1
+        },
+        {
+            "name": "rst_n_in_1",
+            "width": 1
+        },
+        {
+            "name": "clk_in_2",
+            "width": 1
+        },
+        {
+            "name": "rst_n_in_2",
+            "width": 1
+        },
+        {
+            "name": "clk_out_0",
+            "width": 1
+        },
+        {
+            "name": "rst_n_out_0",
+            "width": 1
+        },
+        {
+            "name": "clk_out_1",
+            "width": 1
+        },
+        {
+            "name": "rst_n_out_1",
+            "width": 1
+        },
+        {
+            "name": "clk_out_2",
+            "width": 1
+        },
+        {
+            "name": "rst_n_out_2",
+            "width": 1
+        },
+        {
+            "name": "p0_data_in",
+            "width": 4
+        },
+        {
+            "name": "p0_valid_in",
+            "width": 1
+        },
+        {
+            "name": "p0_dest_in",
+            "width": 2
+        },
+        {
+            "name": "p1_data_in",
+            "width": 4
+        },
+        {
+            "name": "p1_valid_in",
+            "width": 1
+        },
+        {
+            "name": "p1_dest_in",
+            "width": 2
+        },
+        {
+            "name": "p2_data_in",
+            "width": 4
+        },
+        {
+            "name": "p2_valid_in",
+            "width": 1
+        },
+        {
+            "name": "p2_dest_in",
+            "width": 2
+        },
+        {
+            "name": "p0_ready_ext",
+            "width": 1
+        },
+        {
+            "name": "p1_ready_ext",
+            "width": 1
+        },
+        {
+            "name": "p2_ready_ext",
+            "width": 1
+        }
+    ],
+    "common_internal_outputs": [
+        {
+            "name": "gen_clk_in0_div2",
+            "width": 1
+        },
+        {
+            "name": "gen_clk_in1_div4",
+            "width": 1
+        },
+        {
+            "name": "gen_clk_out0_div8",
+            "width": 1
+        },
+        {
+            "name": "p0_ready_out",
+            "width": 1
+        },
+        {
+            "name": "p1_ready_out",
+            "width": 1
+        },
+        {
+            "name": "p2_ready_out",
+            "width": 1
+        }
+    ],
+    "formal_initialization": {
+        "reference_clock": "clk_out_0",
+        "resets_to_assert": [
+            "rst_n_in_0",
+            "rst_n_in_1",
+            "rst_n_in_2",
+            "rst_n_out_0",
+            "rst_n_out_1",
+            "rst_n_out_2"
+        ]
+    },
+    "interfaces": {
+        "p0": {
+            "clock": "clk_out_0",
+            "reset": "rst_n_out_0",
+            "data": {
+                "golden": "p0_data_out",
+                "revised": "p0_data_out",
+                "width": 4
+            },
+            "valid": {
+                "golden": "p0_valid_out",
+                "revised": "p0_valid_out"
+            },
+            "latency_diff": 0
+        },
+        "p1": {
+            "clock": "clk_out_1",
+            "reset": "rst_n_out_1",
+            "data": {
+                "golden": "p1_data_out",
+                "revised": "p1_data_out",
+                "width": 4
+            },
+            "valid": {
+                "golden": "p1_valid_out",
+                "revised": "p1_valid_out"
+            },
+            "latency_diff": 0
+        },
+        "p2": {
+            "clock": "clk_out_2",
+            "reset": "rst_n_out_2",
+            "data": {
+                "golden": "p2_data_out",
+                "revised": "p2_data_out",
+                "width": 4
+            },
+            "valid": {
+                "golden": "p2_valid_out",
+                "revised": "p2_valid_out"
+            },
+            "latency_diff": 0
+        }
+    }
+}

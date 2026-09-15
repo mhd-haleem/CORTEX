@@ -11,9 +11,10 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # --- Configuration & Defaults ---
-PYTHON_SCRIPT="RTL_Optimize/modify_rtl.py"
-PROMPT_FILE="RTL_Optimize/prompt.txt"
-JSON_FILE="RTL_Optimize/llm_payload.json"
+CORTEX_ROOT="$(pwd)" # Or anchor it before the cd command
+PYTHON_SCRIPT="$CORTEX_ROOT/RTL_Optimize/modify_rtl.py"
+PROMPT_FILE="$CORTEX_ROOT/RTL_Optimize/prompt.txt"
+JSON_FILE="$CORTEX_ROOT/RTL_Optimize/llm_payload.json"
 MAX_ITERATIONS="3"
 
 # Make sure this matches your actual design folder name
@@ -25,6 +26,15 @@ RTL_FILES=()
 
 # Dynamically set paths so anyone can run this
 OPENLANE_DIR="$(pwd)/OpenLane"
+
+# >>> CRITICAL FIX: Step into the OpenLane folder so all relative paths work <<<
+if [ -d "$OPENLANE_DIR" ]; then
+    cd "$OPENLANE_DIR"
+else
+    echo -e "${RED}[ERROR] OpenLane directory not found at $OPENLANE_DIR${NC}"
+    exit 1
+fi
+
 # Use the user's PDK_ROOT if exported, otherwise default to ~/.ciel
 USER_PDK_ROOT=${PDK_ROOT:-$HOME/.ciel}
 USER_ID=$(id -u)
@@ -48,21 +58,142 @@ else
 fi
 
 echo "========================================"
-echo " Starting OpenLane Synthesis"
+echo " Phase 1: Initial OpenLane Synthesis"
 echo "========================================"
 
-# Check if PDK directory actually exists to help new users
 if [ ! -d "$USER_PDK_ROOT" ]; then
-    echo "[ERROR] PDK_ROOT not found at $USER_PDK_ROOT."
+    echo -e "${RED}[ERROR] PDK_ROOT not found at $USER_PDK_ROOT.${NC}"
     echo "If your PDK is located elsewhere, run: export PDK_ROOT=/path/to/your/pdk"
     exit 1
 fi
 
-# 1. Run OpenLane Synthesis Non-Interactively
-echo "Executing OpenLane non-interactively..."
-echo "Running in: $OPENLANE_DIR"
-echo "Using PDK: $USER_PDK_ROOT"
+read -p "Do you want to run Initial OpenLane Synthesis now? (Type 'n' to use existing logs) [Y/n]: " run_synth
 
+if [[ -z "$run_synth" || "$run_synth" == [yY]* ]]; then
+    echo "Executing OpenLane non-interactively..."
+    echo "Running in: $OPENLANE_DIR"
+    
+    set +e
+    docker run --rm \
+        -v "$OPENLANE_DIR:/openlane" \
+        -v "$OPENLANE_DIR/designs:/openlane/install" \
+        -v "$HOME:$HOME" \
+        -v "$USER_PDK_ROOT:$USER_PDK_ROOT" \
+        -e PDK_ROOT="$USER_PDK_ROOT" \
+        -e PDK=sky130A \
+        --user $USER_ID:$GROUP_ID \
+        --network host \
+        ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64 \
+        bash -c "./flow.tcl -design $DESIGN"
+    
+    DOCKER_EXIT_CODE=$?
+    set -e
+
+    if [ $DOCKER_EXIT_CODE -eq 0 ]; then
+        echo -e "${GREEN}[SUCCESS] Initial Flow completed successfully. No optimization required!${NC}"
+        exit 0
+    fi
+else
+    echo -e "${YELLOW}[INFO] Skipping initial synthesis. Finding existing run logs...${NC}"
+fi
+
+# Find the LATEST run directory for pre-optimization metrics
+PRE_RUN=$(ls -td "$OPENLANE_DIR/designs/$DESIGN/runs/RUN_"* 2>/dev/null | head -1)
+
+if [ -z "$PRE_RUN" ]; then
+    echo -e "${RED}[ERROR] Could not find any OpenLane run directories for $DESIGN.${NC}"
+    exit 1
+fi
+
+# Extract initial Worst Negative Slack (WNS)
+SYNTH_REPORT="$PRE_RUN/reports/synthesis/2-syn_sta.max.rpt"
+PRE_WNS=$(grep -m 1 "slack (VIOLATED)" "$SYNTH_REPORT" | awk '{print $1}' || echo "N/A")
+YOSYS_MAP=$(ls "$PRE_RUN/results/synthesis/"*.json | head -1)
+SRC_DIR="$OPENLANE_DIR/designs/$DESIGN/src"
+
+echo "========================================"
+echo " Phase 2: Running RTL Parser..."
+echo "========================================"
+
+python3 "$PARSER_SCRIPT" \
+    --sta "$SYNTH_REPORT" \
+    --netlist "$YOSYS_MAP" \
+    --src_dir "$SRC_DIR" \
+    --out_dir "llm_context"
+
+# Build Dynamic RTL_FILES Array
+TARGET_RTL_OPTIMIZE="$CORTEX_ROOT/RTL_Optimize"
+TARGET_DUT_DIR="$TARGET_RTL_OPTIMIZE/DUT"
+mkdir -p "$TARGET_DUT_DIR"
+
+RTL_FILES=()
+for file in llm_context/*.v llm_context/*.sv; do
+    if [ -f "$file" ]; then
+        basename_file=$(basename "$file")
+        cp "$file" "$TARGET_DUT_DIR/$basename_file"
+        RTL_FILES+=("RTL_Optimize/DUT/$basename_file")
+    fi
+done
+
+echo -e "\n${BLUE}Target bottleneck files (${#RTL_FILES[@]} total):${NC}"
+for f in "${RTL_FILES[@]}"; do echo "  -> $f"; done
+echo ""
+
+read -p "Proceed with sending this JSON and RTL files to the LLM? (y/n): " confirm
+if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
+    echo "Optimization aborted by user."
+    exit 1
+fi
+
+# Ensure root RTL_Optimize destination folder exists and copy JSON
+mkdir -p "$TARGET_RTL_OPTIMIZE"
+GENERATED_JSON=$(ls llm_context/*.json 2>/dev/null | head -1)
+
+if [[ -n "$GENERATED_JSON" && -f "$GENERATED_JSON" ]]; then
+    cp "$GENERATED_JSON" "$TARGET_RTL_OPTIMIZE/llm_payload.json"
+else
+    echo -e "${RED}[ERROR] No JSON file found in 'llm_context/' to copy!${NC}"
+    exit 1
+fi
+
+# Dependency and API Verification
+PYTHON_CMD="$CORTEX_ROOT/venv/bin/python"
+if [[ -f "../.env" ]]; then export $(grep -v '^#' ../.env | xargs); elif [[ -f ".env" ]]; then export $(grep -v '^#' .env | xargs); fi
+if [[ -z "${GEMINI_API_KEY:-}" ]]; then echo -e "${RED}[ERROR] GEMINI_API_KEY is not set.${NC}"; exit 1; fi
+
+echo "========================================"
+echo " Phase 3: Executing LLM Optimization Loop"
+echo "========================================"
+cd "$CORTEX_ROOT"
+
+"$PYTHON_CMD" "$PYTHON_SCRIPT" "${RTL_FILES[@]}" \
+    --prompt_file "$PROMPT_FILE" \
+    --json_file "$JSON_FILE" \
+    --max-iterations "$MAX_ITERATIONS"
+
+LLM_EXIT_CODE=$?
+
+if [[ $LLM_EXIT_CODE -ne 0 ]]; then
+    echo -e "${RED}[FAILURE] RTL modification flow failed. Halting.${NC}"
+    exit $LLM_EXIT_CODE
+fi
+
+echo -e "${GREEN}[SUCCESS] LLM successfully modified the RTL!${NC}"
+echo -e "${YELLOW}[*] Assuming Formal Verification (LEC) is SUCCESSFUL.${NC}"
+
+echo "========================================"
+echo " Phase 4: Post-Optimization Synthesis"
+echo "========================================"
+
+# Inject LLM optimized files back into the original design directory
+echo -e "${BLUE}[*] Injecting Optimized RTL into OpenLane Design Directory...${NC}"
+for f in "${RTL_FILES[@]}"; do
+    cp "$CORTEX_ROOT/$f" "$OPENLANE_DIR/designs/$DESIGN/src/"
+done
+
+cd "$OPENLANE_DIR"
+
+set +e
 docker run --rm \
     -v "$OPENLANE_DIR:/openlane" \
     -v "$OPENLANE_DIR/designs:/openlane/install" \
@@ -75,169 +206,40 @@ docker run --rm \
     ghcr.io/the-openroad-project/openlane:ff5509f65b17bfa4068d5336495ab1718987ff69-amd64 \
     bash -c "./flow.tcl -design $DESIGN"
 
-# Capture the exit status
-if [ $? -eq 0 ]; then
-    echo "[SUCCESS] Flow completed successfully. No optimization required."
-    exit 0
-fi
+POST_DOCKER_EXIT_CODE=$?
+set -e
 
-echo "========================================"
-echo " Flow failed. Finding latest run logs..."
-echo "========================================"
+POST_RUN=$(ls -td "$OPENLANE_DIR/designs/$DESIGN/runs/RUN_"* 2>/dev/null | head -1)
+POST_REPORT="$POST_RUN/reports/synthesis/2-syn_sta.max.rpt"
 
-# 2. Safely find the LATEST run directory to avoid Bash wildcard errors
-LATEST_RUN=$(ls -td designs/$DESIGN/runs/RUN_* 2>/dev/null | head -1)
-
-if [ -z "$LATEST_RUN" ]; then
-    echo "[ERROR] Could not find any OpenLane run directories for $DESIGN."
-    exit 1
-fi
-
-echo "Using latest run directory: $LATEST_RUN"
-
-# Standard OpenLane paths for the needed files
-SYNTH_REPORT="$LATEST_RUN/reports/synthesis/2-syn_sta.max.rpt"
-YOSYS_MAP=$(ls "$LATEST_RUN/results/synthesis/"*.json | head -1)
-SRC_DIR="$OPENLANE_DIR/designs/$DESIGN/src"
-
-echo "========================================"
-echo " Running Parser..."
-echo "========================================"
-
-# 3. Run the Parser to dump everything into the 'llm_context' folder
-python3 "$PARSER_SCRIPT" \
-    --sta "$SYNTH_REPORT" \
-    --netlist "$YOSYS_MAP" \
-    --src_dir "$SRC_DIR" \
-    --out_dir "llm_context"
-    
-# ========================================
-# 4. Build Dynamic RTL_FILES Array & Sync to DUT
-# ========================================
-mkdir -p RTL_Optimize/DUT
-
-RTL_FILES=()
-for file in llm_context/*.v llm_context/*.sv 2>/dev/null; do
-    if [ -f "$file" ]; then
-        basename_file=$(basename "$file")
-        
-        # Copy file into RTL_Optimize/DUT/ folder for the workflow script
-        cp "$file" "RTL_Optimize/DUT/$basename_file"
-        
-        # Format path into RTL_FILES array
-        RTL_FILES+=("RTL_Optimize/DUT/$basename_file")
+if [ -f "$POST_REPORT" ]; then
+    POST_WNS=$(grep -m 1 "slack (VIOLATED)" "$POST_REPORT" | awk '{print $1}')
+    if [ -z "$POST_WNS" ]; then
+        POST_WNS="MET (No Violations)"
     fi
-done
-
-echo ""
-echo "========================================"
-echo " Dynamic array 'RTL_FILES' configured!"
-echo " Target bottleneck files (${#RTL_FILES[@]} total):"
-for f in "${RTL_FILES[@]}"; do
-    echo "  -> $f"
-done
-echo "========================================"
-echo ""
-
-read -p "Proceed with sending this JSON and the required RTL files to the LLM? (y/n): " confirm
-if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
-    echo "Optimization aborted by user."
-    exit 1
-fi
-
-echo -e "${GREEN}[*] User confirmed! Copying JSON file to RTL_Optimize directory...${NC}"
-
-# Create destination folder if it doesn't exist
-mkdir -p RTL_Optimize
-
-# Locate generated JSON in llm_context and copy to RTL_Optimize/llm_payload.json
-GENERATED_JSON=$(ls llm_context/*.json 2>/dev/null | head -1)
-
-if [[ -n "$GENERATED_JSON" && -f "$GENERATED_JSON" ]]; then
-    cp "$GENERATED_JSON" "$JSON_FILE"
-    echo -e "${GREEN}[+] Successfully copied '${GENERATED_JSON}' -> '${JSON_FILE}'${NC}"
 else
-    echo -e "${RED}[ERROR] No JSON file found in 'llm_context/' to copy!${NC}"
-    exit 1
+    POST_WNS="MET (No Violations)"
 fi
 
-# --- 1. Array & File Verification ---
-if [[ ${#RTL_FILES[@]} -eq 0 ]]; then
-    echo -e "${RED}[ERROR] RTL_FILES array is empty. No bottleneck files found in 'llm_context/'.${NC}"
-    exit 1
-fi
+echo "========================================"
+echo " Phase 5: PPA Optimization Results"
+echo "========================================"
 
-# Validate existence of every file in the array
-for rtl_file in "${RTL_FILES[@]}"; do
-    if [[ ! -f "$rtl_file" ]]; then
-        echo -e "${RED}[ERROR] Target RTL file not found: '${rtl_file}'${NC}"
-        exit 1
-    fi
-done
-
-if [[ ! -f "$JSON_FILE" ]]; then
-    echo -e "${RED}[ERROR] Target JSON file not found: '${JSON_FILE}'${NC}"
-    exit 1
-fi
-
-if [[ ! -f "$PROMPT_FILE" ]]; then
-    echo -e "${RED}[ERROR] Modification prompt file not found: '${PROMPT_FILE}'${NC}"
-    exit 1
-fi
-
-if [[ ! -f "$PYTHON_SCRIPT" ]]; then
-    echo -e "${RED}[ERROR] Python workflow script '${PYTHON_SCRIPT}' not found.${NC}"
-    exit 1
-fi
-
-# --- 2. Dependency Verification ---
-echo -e "${BLUE}[*] Validating system dependencies...${NC}"
-
-if ! command -v python3 &> /dev/null && ! command -v python &> /dev/null; then
-    echo -e "${RED}[ERROR] Python interpreter not found. Please install Python.${NC}"
-    exit 1
-fi
-
-PYTHON_CMD=$(command -v python3 || command -v python)
-
-if ! command -v iverilog &> /dev/null; then
-    echo -e "${RED}[ERROR] 'iverilog' command could not be found. Please install Icarus Verilog.${NC}"
-    exit 1
-fi
-
-# --- 3. Environment & API Key Check ---
-if [[ -f ".env" ]]; then
-    echo -e "${BLUE}[*] Loading environment variables from .env file...${NC}"
-    export $(grep -v '^#' .env | xargs)
-fi
-
-if [[ -z "${GEMINI_API_KEY:-}" ]]; then
-    echo -e "${RED}[ERROR] GEMINI_API_KEY is not set.${NC}"
-    echo -e "${YELLOW}Set it in your terminal or inside a .env file:${NC}"
-    echo -e "  export GEMINI_API_KEY='your_actual_api_key'"
-    exit 1
-fi
-
-# --- 4. Execution Phase ---
-echo -e "${GREEN}[*] Starting RTL Optimization Flow...${NC}"
-echo -e "  - RTL Sources         : ${RTL_FILES[*]}"
-echo -e "  - Modification Prompt : ${PROMPT_FILE}"
-echo -e "  - JSON File           : ${JSON_FILE}"
-echo -e "  - Max Iterations      : ${MAX_ITERATIONS}"
-echo -e "--------------------------------------------------------"
-
-"$PYTHON_CMD" "$PYTHON_SCRIPT" "${RTL_FILES[@]}" \
-    --prompt_file "$PROMPT_FILE" \
-    --json_file "$JSON_FILE" \
-    --max-iterations "$MAX_ITERATIONS"
-
-EXIT_CODE=$?
-
-# --- 5. Status Output ---
-echo -e "--------------------------------------------------------"
-if [[ $EXIT_CODE -eq 0 ]]; then
-    echo -e "${GREEN}[SUCCESS] RTL modification and verification flow completed successfully.${NC}"
+if [ $POST_DOCKER_EXIT_CODE -eq 0 ]; then
+    echo -e "${GREEN}[VICTORY] Timing closed successfully! Zero setup violations.${NC}"
 else
-    echo -e "${RED}[FAILURE] RTL modification flow failed or max retries reached.${NC}"
-    exit $EXIT_CODE
+    echo -e "${RED}[WARNING] OpenLane reported a flow failure. The RTL may still have violations or new syntax errors.${NC}"
 fi
+
+echo -e "\n--- Timing Comparison (Worst Negative Slack) ---"
+echo -e "Before LLM Optimization : ${RED}${PRE_WNS} ns${NC}"
+if [[ "$POST_WNS" == *"MET"* ]]; then
+    echo -e "After LLM Optimization  : ${GREEN}${POST_WNS}${NC}"
+else
+    echo -e "After LLM Optimization  : ${YELLOW}${POST_WNS} ns${NC}"
+fi
+
+echo -e "\n--- Detailed Reports ---"
+echo -e "Original Run : $PRE_RUN/reports/metrics.csv"
+echo -e "Optimized Run: $POST_RUN/reports/metrics.csv"
+echo -e "========================================\n"

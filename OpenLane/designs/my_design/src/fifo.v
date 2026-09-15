@@ -1,8 +1,8 @@
 `timescale 1ns / 1ps
 
 module fifo #(
-    parameter DATASIZE = 8,   // Memory data word width
-    parameter ADDRSIZE = 4    // Number of mem address bits (Depth = 16)
+    parameter DATASIZE = 4,   // Memory data word width
+    parameter ADDRSIZE = 2    // Number of mem address bits (Depth = 16)
 ) (
     input  wire                wclk,
     input  wire                wclken, // Write enable (tied to winc at top level)

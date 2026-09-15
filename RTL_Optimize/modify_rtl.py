@@ -1,4 +1,5 @@
 # Version 5: Multi-RTL Optimization with Combined FEC JSON Extraction & Syntax Feedback Loop
+# (Includes Anti-Laziness Safeguard)
 
 import argparse
 import json
@@ -15,12 +16,10 @@ from google.genai.errors import ServerError
 API_KEY = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
-
 def parse_combined_json_response(llm_response: str) -> tuple[dict[str, str], dict]:
     """
     Parses the raw JSON response from Gemini containing 'modified_rtl' and 'fec_config'.
-    Strips Markdown code fences if the LLM accidentally includes them.
-    Returns: (modified_rtl_dict, fec_config_dict)
+    Strips Markdown code fences and guarantees dictionary return types.
     """
     if not llm_response:
         return {}, {}
@@ -34,20 +33,31 @@ def parse_combined_json_response(llm_response: str) -> tuple[dict[str, str], dic
 
     try:
         data = json.loads(clean_text)
-        modified_rtl = data.get("modified_rtl", {})
-        fec_config = data.get("fec_config", {})
-        return modified_rtl, fec_config
     except json.JSONDecodeError as e:
-        # Fallback regex extraction if leading/trailing whitespace breaks direct parse
         match = re.search(r"(\{.*\})", clean_text, re.DOTALL)
         if match:
             try:
                 data = json.loads(match.group(1))
-                return data.get("modified_rtl", {}), data.get("fec_config", {})
             except json.JSONDecodeError:
-                pass
-        print(f"[ERROR] Failed to parse JSON response from LLM: {e}")
-        return {}, {}
+                print(f"[ERROR] Failed to parse JSON response from LLM: {e}")
+                return {}, {}
+        else:
+            print(f"[ERROR] Failed to parse JSON response from LLM: {e}")
+            return {}, {}
+
+    modified_rtl = data.get("modified_rtl", {})
+    fec_config = data.get("fec_config", {})
+
+    # Guard: If LLM returned modified_rtl as a string instead of a dictionary
+    if isinstance(modified_rtl, str):
+        modified_rtl = {"_raw_string_fallback": modified_rtl}
+    elif not isinstance(modified_rtl, dict):
+        modified_rtl = {}
+
+    if not isinstance(fec_config, dict):
+        fec_config = {}
+
+    return modified_rtl, fec_config
 
 
 def run_eda_parser(filenames: list[str]) -> tuple[bool, str]:
@@ -84,7 +94,7 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
     base_opt_dir = "RTL_Optimize"
     iter_dir = os.path.join(base_opt_dir, "iter")
     dut_dir = os.path.join(base_opt_dir, "DUT")
-    fv_dir = os.path.join("OpenLane", "Formal_Verification")
+    fv_dir = os.path.join("OpenLane", "Formal_Verification","config")
 
     os.makedirs(iter_dir, exist_ok=True)
     os.makedirs(dut_dir, exist_ok=True)
@@ -107,7 +117,7 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
 
     print(f"[*] Loaded {len(source_files)} RTL file(s) into {dut_dir}.")
     print(f"[*] Initializing chat session with Gemini...")
-    chat = client.chats.create(model="gemini-3.6-flash")
+    chat = client.chats.create(model="gemini-3.6-flash") # Using pro or flash based on your previous config
 
     system_instruction = (
         "You are an expert RTL hardware engineer. Your task is to modify the provided Verilog code "
@@ -143,7 +153,17 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
             iter_filename = os.path.join(iter_dir, f"{file_base}_mod_iter{iteration}{file_ext}")
             dut_filename = os.path.join(dut_dir, basename)
 
-            code_to_write = modified_rtl_dict.get(basename, "")
+            code_to_write = modified_rtl_dict.get(basename, "").strip()
+
+            # --- ANTI-LAZINESS SAFEGUARD ---
+            if len(code_to_write) < 50:
+                print(f"[-] LLM skipped '{basename}' (returned empty). Preserving original file.")
+                # Read the current intact file so we don't wipe it out
+                with open(src_file, "r", encoding="utf-8") as orig_f:
+                    code_to_write = orig_f.read()
+            else:
+                print(f"[+] Saved updated RTL snapshot: {iter_filename}")
+            # -------------------------------
 
             # Save iteration snapshot
             with open(iter_filename, "w", encoding="utf-8") as f:
@@ -153,18 +173,17 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
             with open(dut_filename, "w", encoding="utf-8") as f:
                 f.write(code_to_write)
 
-            print(f"[+] Saved updated RTL snapshot: {iter_filename}")
-
         # Save fec_config.json for Python formal wrapper generator
-        fec_dest_primary = os.path.join(fv_dir, "fec_config.json")
-        fec_dest_backup = os.path.join(base_opt_dir, "fec_config.json")
+        if fec_config_dict:
+            fec_dest_primary = os.path.join(fv_dir, "llm_delta.json")
+            fec_dest_backup = os.path.join(base_opt_dir, "llm_delta.json")
 
-        with open(fec_dest_primary, "w", encoding="utf-8") as f:
-            json.dump(fec_config_dict, f, indent=2)
-        with open(fec_dest_backup, "w", encoding="utf-8") as f:
-            json.dump(fec_config_dict, f, indent=2)
+            with open(fec_dest_primary, "w", encoding="utf-8") as f:
+                json.dump(fec_config_dict, f, indent=2)
+            with open(fec_dest_backup, "w", encoding="utf-8") as f:
+                json.dump(fec_config_dict, f, indent=2)
 
-        print(f"[+] Successfully extracted and saved 'fec_config.json' -> {fec_dest_primary}")
+            print(f"[+] Successfully extracted and saved 'llm_delta.json' -> {fec_dest_primary}")
 
         # Gather ALL .v and .sv files currently in RTL_Optimize/DUT for syntax check
         dut_files = [
@@ -189,7 +208,7 @@ def modify_and_fix_rtl(source_files: list[str], modification_prompt: str, json_d
                 f"The modified code generated in iteration {iteration} failed compilation with the following errors:\n"
                 f"```\n{compiler_message}\n```\n"
                 f"Please fix all syntax and structural errors reported above and return a single valid JSON object "
-                f"containing 'modified_rtl' and 'fec_config'."
+                f"containing 'modified_rtl' and 'fec_config'. You MUST return the code for ALL files, do not skip any."
             )
 
     print(f"\n[FAILURE] Reached maximum iterations ({max_iterations}) without resolving all syntax errors.")

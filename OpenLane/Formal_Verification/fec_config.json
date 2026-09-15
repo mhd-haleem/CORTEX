@@ -1,0 +1,21 @@
+{
+  "modified_modules": [
+    "output_port_3by3"
+  ],
+  "interfaces": {
+    "p0": {
+      "clock": "clk_out",
+      "reset": "rst_n",
+      "data": {
+        "golden": "data_out",
+        "revised": "data_out",
+        "width": 4
+      },
+      "valid": {
+        "golden": "valid_out",
+        "revised": "valid_out"
+      },
+      "latency_diff": 0
+    }
+  }
+}

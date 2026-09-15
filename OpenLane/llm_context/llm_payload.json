@@ -1163,19 +1163,19 @@
   },
   {
     "violation_type": "timing_max",
-    "slack": -0.18,
+    "slack": -0.19,
     "startpoint": {
-      "instance": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.rptr_empty_inst.rbinnext[0]_sky130_fd_sc_hd__dfrtp_2_D",
+      "instance": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.raddr[0]_sky130_fd_sc_hd__dfrtp_2_Q",
       "rtl_source": "/openlane/designs/my_design/src/xbar_3by3_bencmark_top.v:124.19-136.18|/openlane/designs/my_design/src/rptr_empty.v:22.5-29.8|/openlane/designs/my_design/src/top_fifo.v:81.7-89.6"
     },
     "endpoint": {
       "instance": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][57]_sky130_fd_sc_hd__mux4_2_A0_X_sky130_fd_sc_hd__o21ba_2_A2_X_sky130_fd_sc_hd__or3_2_C_X_sky130_fd_sc_hd__a22oi_2_A1_Y_sky130_fd_sc_hd__xor2_2_A_X_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xnor2_2_B_A_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xor2_2_B_X_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__a211o_2_C1_A2_sky130_fd_sc_hd__or2_2_B_X_sky130_fd_sc_hd__o2bb2a_2_A2_N_X_sky130_fd_sc_hd__dfrtp_2_D",
       "rtl_source": "/openlane/designs/my_design/src/xbar_3by3_bencmark_top.v:152.49-158.6|/openlane/designs/my_design/src/output_port_3by3.v:80.5-95.8"
     },
-    "total_combinational_depth": 58,
+    "total_combinational_depth": 61,
     "critical_logic_path": [
       {
-        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.raddr[0]",
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.raddr[0]",
         "rtl_source": "Implicit/Unknown",
         "logic_depth": 2,
         "gate_chain": [
@@ -1184,21 +1184,38 @@
         ]
       },
       {
-        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[4][1]",
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[16][2]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 1,
+        "logic_depth": 2,
         "gate_chain": [
-          "MUX4"
+          "MUX4",
+          "MUX2"
         ]
       },
       {
-        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[8][1]",
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[28][2]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 3,
+        "logic_depth": 1,
         "gate_chain": [
-          "MUX4",
+          "MUX2"
+        ]
+      },
+      {
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[8][2]",
+        "rtl_source": "Implicit/Unknown",
+        "logic_depth": 2,
+        "gate_chain": [
           "MUX2",
-          "O22AI"
+          "AND2"
+        ]
+      },
+      {
+        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][2]",
+        "rtl_source": "Implicit/Unknown",
+        "logic_depth": 2,
+        "gate_chain": [
+          "O2BB2A",
+          "BUF"
         ]
       },
       {
@@ -1206,7 +1223,7 @@
         "rtl_source": "Implicit/Unknown",
         "logic_depth": 4,
         "gate_chain": [
-          "XNOR2",
+          "NOR2B",
           "OR4",
           "A21O",
           "A21OI"
@@ -1304,18 +1321,18 @@
       {
         "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][14]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 3,
+        "logic_depth": 2,
         "gate_chain": [
-          "OR4",
-          "AND3",
-          "O22A"
+          "O22A",
+          "OR4"
         ]
       },
       {
         "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][7]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 3,
+        "logic_depth": 4,
         "gate_chain": [
+          "AND3",
           "OR4",
           "AND3",
           "O22A"
@@ -1376,19 +1393,19 @@
   },
   {
     "violation_type": "timing_max",
-    "slack": -0.13,
+    "slack": -0.14,
     "startpoint": {
-      "instance": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.rptr_empty_inst.rbinnext[0]_sky130_fd_sc_hd__dfrtp_2_D",
+      "instance": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.raddr[0]_sky130_fd_sc_hd__dfrtp_2_Q",
       "rtl_source": "/openlane/designs/my_design/src/xbar_3by3_bencmark_top.v:124.19-136.18|/openlane/designs/my_design/src/rptr_empty.v:22.5-29.8|/openlane/designs/my_design/src/top_fifo.v:81.7-89.6"
     },
     "endpoint": {
       "instance": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][57]_sky130_fd_sc_hd__mux4_2_A0_X_sky130_fd_sc_hd__o21ba_2_A2_X_sky130_fd_sc_hd__or3_2_C_X_sky130_fd_sc_hd__a22oi_2_A1_Y_sky130_fd_sc_hd__xor2_2_A_X_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xnor2_2_B_A_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__xor2_2_B_X_sky130_fd_sc_hd__xnor2_2_B_Y_sky130_fd_sc_hd__nand2_2_B_A_sky130_fd_sc_hd__a22o_2_B1_X_sky130_fd_sc_hd__dfrtp_2_D",
       "rtl_source": "/openlane/designs/my_design/src/xbar_3by3_bencmark_top.v:152.49-158.6|/openlane/designs/my_design/src/output_port_3by3.v:80.5-95.8"
     },
-    "total_combinational_depth": 58,
+    "total_combinational_depth": 61,
     "critical_logic_path": [
       {
-        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.raddr[0]",
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.raddr[0]",
         "rtl_source": "Implicit/Unknown",
         "logic_depth": 2,
         "gate_chain": [
@@ -1397,21 +1414,38 @@
         ]
       },
       {
-        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[4][1]",
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[16][2]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 1,
+        "logic_depth": 2,
         "gate_chain": [
-          "MUX4"
+          "MUX4",
+          "MUX2"
         ]
       },
       {
-        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[8][1]",
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[28][2]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 3,
+        "logic_depth": 1,
         "gate_chain": [
-          "MUX4",
+          "MUX2"
+        ]
+      },
+      {
+        "hierarchy_node": "GEN_IN[1].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[8][2]",
+        "rtl_source": "Implicit/Unknown",
+        "logic_depth": 2,
+        "gate_chain": [
           "MUX2",
-          "O22AI"
+          "AND2"
+        ]
+      },
+      {
+        "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][2]",
+        "rtl_source": "Implicit/Unknown",
+        "logic_depth": 2,
+        "gate_chain": [
+          "O2BB2A",
+          "BUF"
         ]
       },
       {
@@ -1419,7 +1453,7 @@
         "rtl_source": "Implicit/Unknown",
         "logic_depth": 4,
         "gate_chain": [
-          "XNOR2",
+          "NOR2B",
           "OR4",
           "A21O",
           "A21OI"
@@ -1517,18 +1551,18 @@
       {
         "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][14]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 3,
+        "logic_depth": 2,
         "gate_chain": [
-          "OR4",
-          "AND3",
-          "O22A"
+          "O22A",
+          "OR4"
         ]
       },
       {
         "hierarchy_node": "GEN_IN[0].GEN_OUT[1].FIFO_CROSSPOINT.fifomem_inst.mem[0][7]",
         "rtl_source": "Implicit/Unknown",
-        "logic_depth": 3,
+        "logic_depth": 4,
         "gate_chain": [
+          "AND3",
           "OR4",
           "AND3",
           "O22A"

@@ -1,8 +1,18 @@
+// ==========================================
+// BOTTLENECK LEAF MODULE
+// Original File: /home/basith/CORTEX/OpenLane/designs/my_design/src/top_fifo.v
+// ==========================================
+
+// ==========================================
+// BOTTLENECK LEAF MODULE
+// Original File: /home/basith/CORTEX/OpenLane/designs/my_design/src/top_fifo.v
+// ==========================================
+
 `timescale 1ns / 1ps
 
 module top_fifo #(
-    parameter DSIZE = 8,  // Data width
-    parameter ASIZE = 4   // Address width (Depth = 16)
+    parameter DSIZE = 4,  // Data width
+    parameter ASIZE = 2   // Address width (Depth = 16)
 ) (
     // Write Domain
     input  wire             wclk,

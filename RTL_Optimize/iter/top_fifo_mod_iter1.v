@@ -1,6 +1,18 @@
+// ==========================================
+// BOTTLENECK LEAF MODULE
+// Original File: /home/basith/CORTEX/OpenLane/designs/my_design/src/top_fifo.v
+// ==========================================
+
+// ==========================================
+// BOTTLENECK LEAF MODULE
+// Original File: /home/basith/CORTEX/OpenLane/designs/my_design/src/top_fifo.v
+// ==========================================
+
+`timescale 1ns / 1ps
+
 module top_fifo #(
-    parameter DSIZE = 8,  // Data width
-    parameter ASIZE = 4   // Address width (Depth = 16)
+    parameter DSIZE = 4,  // Data width
+    parameter ASIZE = 2   // Address width (Depth = 16)
 ) (
     // Write Domain
     input  wire             wclk,
@@ -22,6 +34,7 @@ module top_fifo #(
     wire [ASIZE:0]   wptr, rptr, wq2_rptr, rq2_wptr;
 
     // 1. Dual-Port RAM Instantiation
+   
     fifo #(
         .DATASIZE(DSIZE),
         .ADDRSIZE(ASIZE)
@@ -36,6 +49,7 @@ module top_fifo #(
     );
 
     // 2. Read-to-Write Synchronizer
+    
     sync_r2w #(
         .N(ASIZE + 1)
     ) sync_r2w_inst (
@@ -46,6 +60,7 @@ module top_fifo #(
     );
 
     // 3. Write-to-Read Synchronizer
+    
     sync_w2r #(
         .N(ASIZE + 1)
     ) sync_w2r_inst (
@@ -56,6 +71,7 @@ module top_fifo #(
     );
 
     // 4. Write Pointer & Full Logic
+    
     wptr_full #(
         .ADDRSIZE(ASIZE)
     ) wptr_full_inst (
@@ -69,6 +85,7 @@ module top_fifo #(
     );
 
     // 5. Read Pointer & Empty Logic
+    
     rptr_empty #(
         .ADDRSIZE(ASIZE)
     ) rptr_empty_inst (

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module output_port_3by3 #(
-    parameter DATA_WIDTH = 64
+    parameter DATA_WIDTH = 4
 )(
     input  wire                  clk_out,
     input  wire                  rst_n,
@@ -66,13 +66,17 @@ module output_port_3by3 #(
 
     // --- CRITICAL PATH INJECTION BLOCK ---
     // Deep multi-stage cascaded combinational arithmetic chain.
-    // This creates the timing violations for the GenAI tool to pipeline/retime.
     reg [DATA_WIDTH-1:0] processed_comb;
     integer step;
     always @(*) begin
         processed_comb = selected_data;
-        for (step = 0; step < 12; step = step + 1) begin
-            processed_comb = (processed_comb ^ (processed_comb << 3)) + 64'hA5A5A5A5_5A5A5A5A + (step * 7);
+        for (step = 0; step < 25; step = step + 1) begin
+            // Data-dependent branching prevents synthesis from collapsing the loop.
+            // Using unsized integers prevents width mismatch warnings if DATA_WIDTH scales up.
+            if (processed_comb[3:0] > 4'd7)
+                processed_comb = processed_comb - 5;
+            else
+                processed_comb = processed_comb + 3;
         end
     end
 
@@ -90,6 +94,9 @@ module output_port_3by3 #(
                 if      (grant[0]) ptr <= 2'd1;
                 else if (grant[1]) ptr <= 2'd2;
                 else if (grant[2]) ptr <= 2'd0;
+            end else if (ptr > 2'd2) begin
+                // SEU / Invalid State Recovery
+                ptr <= 2'd0;
             end
         end
     end
